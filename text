@@ -1,0 +1,455 @@
+# Prompt — Sistema de Controle Financeiro Pessoal
+# Stack: React + TypeScript + Vite + Mantine UI + Supabase
+# Para usar em: v0.dev / Lovable / Bolt.new
+
+---
+
+Crie um sistema web completo de **controle de finanças pessoais** usando:
+- **React + TypeScript + Vite** no frontend
+- **Mantine UI v7** para todos os componentes e estilização (ZERO Tailwind)
+- **Supabase** para autenticação e banco de dados
+- **Recharts** para gráficos
+- **React Router DOM v6** para navegação
+- **Lucide React** para ícones
+
+---
+
+## 🗄️ Configuração do Supabase
+
+### Tabelas (rodar no SQL Editor do Supabase):
+
+```sql
+-- Transações financeiras
+CREATE TABLE transacoes (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  tipo TEXT CHECK (tipo IN ('receita', 'despesa')) NOT NULL,
+  valor NUMERIC(10,2) NOT NULL CHECK (valor > 0),
+  descricao TEXT NOT NULL,
+  categoria TEXT NOT NULL,
+  data DATE NOT NULL,
+  criado_em TIMESTAMPTZ DEFAULT now()
+);
+
+-- Metas de economia
+CREATE TABLE metas (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  nome TEXT NOT NULL,
+  valor_alvo NUMERIC(10,2) NOT NULL CHECK (valor_alvo > 0),
+  valor_atual NUMERIC(10,2) DEFAULT 0,
+  data_limite DATE,
+  concluida BOOLEAN DEFAULT false,
+  criado_em TIMESTAMPTZ DEFAULT now()
+);
+
+-- Segurança: cada usuário vê só os próprios dados
+ALTER TABLE transacoes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE metas ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "usuario_ve_proprias_transacoes" ON transacoes
+  USING (user_id = auth.uid());
+
+CREATE POLICY "usuario_ve_proprias_metas" ON metas
+  USING (user_id = auth.uid());
+```
+
+### Variáveis de ambiente (.env):
+```
+VITE_SUPABASE_URL=sua_url_aqui
+VITE_SUPABASE_ANON_KEY=sua_chave_aqui
+```
+
+### Cliente Supabase (src/lib/supabase.ts):
+```ts
+import { createClient } from '@supabase/supabase-js'
+
+export const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+)
+```
+
+---
+
+## 📦 Instalação das dependências
+
+```bash
+npm create vite@latest finance-app -- --template react-ts
+cd finance-app
+
+# Mantine UI e dependências obrigatórias
+npm install @mantine/core @mantine/hooks @mantine/form @mantine/dates @mantine/charts
+npm install @mantine/notifications @mantine/modals
+npm install @tabler/icons-react
+npm install dayjs
+
+# Supabase + Roteamento + Gráficos
+npm install @supabase/supabase-js react-router-dom recharts
+```
+
+### Configuração do MantineProvider (src/main.tsx):
+```tsx
+import { MantineProvider, createTheme } from '@mantine/core'
+import { Notifications } from '@mantine/notifications'
+import '@mantine/core/styles.css'
+import '@mantine/dates/styles.css'
+import '@mantine/notifications/styles.css'
+import '@mantine/charts/styles.css'
+
+const theme = createTheme({
+  primaryColor: 'teal',
+  fontFamily: 'Plus Jakarta Sans, sans-serif',
+  defaultRadius: 'md',
+  colors: {
+    dark: [
+      '#C9C9C9', '#b8b8b8', '#828282', '#696969',
+      '#424242', '#3b3b3b', '#2e2e2e', '#242424',
+      '#1a1a1a', '#141414',
+    ],
+  },
+})
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <MantineProvider theme={theme} defaultColorScheme="dark">
+    <Notifications />
+    <App />
+  </MantineProvider>
+)
+```
+
+---
+
+## 🔐 Autenticação
+
+### Contexto global (src/contexts/AuthContext.tsx):
+```tsx
+// Criar contexto com: session, user, loading
+// Usar supabase.auth.getSession() no useEffect inicial
+// Escutar mudanças com supabase.auth.onAuthStateChange()
+// Exportar hook useAuth()
+```
+
+### Página de Login (src/pages/Login.tsx):
+- Usar componentes Mantine: `<TextInput>`, `<PasswordInput>`, `<Button>`, `<Paper>`, `<Title>`, `<Anchor>`, `<Stack>`
+- Centralizado na tela com `<Center>` e card `<Paper shadow="md" p="xl" w={420}`
+- Logo/nome do app no topo em destaque
+- Campos: e-mail e senha
+- Botão "Entrar" com `loading` state durante autenticação
+- Links: "Esqueci minha senha" e "Criar conta"
+- Feedback de erro com `notifications.show({ color: 'red', ... })`
+- Chamar: `supabase.auth.signInWithPassword({ email, password })`
+
+### Página de Cadastro (src/pages/Cadastro.tsx):
+- Mesma estrutura visual do Login
+- Campos: Nome completo, e-mail, senha, confirmar senha
+- Validação com `useForm` do Mantine
+- Chamar: `supabase.auth.signUp({ email, password, options: { data: { nome } } })`
+- Após sucesso, mostrar notificação e redirecionar para /dashboard
+
+### Página Recuperar Senha (src/pages/RecuperarSenha.tsx):
+- Campo e-mail + botão "Enviar link"
+- Chamar: `supabase.auth.resetPasswordForEmail(email)`
+- Feedback de sucesso com `<Alert color="teal">`
+
+### Proteção de rotas (src/components/PrivateRoute.tsx):
+- Verificar sessão via `useAuth()`
+- Se não autenticado → redirecionar para /login
+- Mostrar `<LoadingOverlay>` enquanto carrega sessão
+
+---
+
+## 🏠 Layout Principal (src/components/Layout.tsx)
+
+Usar `<AppShell>` do Mantine com:
+
+```tsx
+<AppShell
+  header={{ height: 60 }}
+  navbar={{ width: 240, breakpoint: 'sm', collapsed: { mobile: !opened } }}
+  padding="md"
+>
+  <AppShell.Header>
+    {/* Logo + nome do app à esquerda */}
+    {/* Avatar com inicial do nome + menu dropdown (Perfil, Logout) à direita */}
+    {/* Burger para mobile */}
+  </AppShell.Header>
+
+  <AppShell.Navbar p="md">
+    {/* NavLink para cada rota com ícone do @tabler/icons-react */}
+    {/* Dashboard, Transações, Metas */}
+  </AppShell.Navbar>
+
+  <AppShell.Main>
+    <Outlet /> {/* React Router outlet */}
+  </AppShell.Main>
+</AppShell>
+```
+
+Navbar com `<NavLink>` do Mantine para:
+- 🏠 Dashboard → /dashboard
+- 💸 Transações → /transacoes
+- 🎯 Metas → /metas
+
+---
+
+## 📊 Dashboard (src/pages/Dashboard.tsx)
+
+### Cards de resumo — usar `<SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }}`:
+```tsx
+// Card Receitas — cor teal/verde
+<Paper withBorder p="md" radius="md">
+  <Group justify="space-between">
+    <Text size="xs" c="dimmed">Receitas do mês</Text>
+    <IconArrowUpRight color="teal" />
+  </Group>
+  <Text size="xl" fw={700} c="teal">R$ {receitas}</Text>
+</Paper>
+
+// Card Despesas — cor red
+// Card Saldo — cor blue  
+// Card Economia — cor yellow
+```
+
+Buscar dados do Supabase:
+```ts
+// Receitas do mês
+const { data } = await supabase
+  .from('transacoes')
+  .select('valor')
+  .eq('tipo', 'receita')
+  .gte('data', inicioMes)
+  .lte('data', fimMes)
+```
+
+### Gráfico de Rosca — despesas por categoria:
+```tsx
+// Usar DonutChart do @mantine/charts
+import { DonutChart } from '@mantine/charts'
+
+<DonutChart
+  data={[
+    { name: 'Alimentação', value: 400, color: 'teal.6' },
+    { name: 'Transporte', value: 200, color: 'blue.6' },
+    { name: 'Lazer', value: 150, color: 'grape.6' },
+    // ...
+  ]}
+  tooltipDataSource="segment"
+  withLabels
+/>
+```
+
+### Gráfico de Barras — receitas vs despesas (últimos 6 meses):
+```tsx
+// Usar BarChart do @mantine/charts
+import { BarChart } from '@mantine/charts'
+
+<BarChart
+  h={300}
+  data={dadosMensais}
+  dataKey="mes"
+  series={[
+    { name: 'Receitas', color: 'teal.6' },
+    { name: 'Despesas', color: 'red.6' },
+  ]}
+/>
+```
+
+### Últimas 5 transações:
+```tsx
+// Table do Mantine com as 5 transações mais recentes
+// Badge colorido por tipo (teal = receita, red = despesa)
+// Botão "Ver todas" com variant="subtle"
+```
+
+---
+
+## 💸 Transações (src/pages/Transacoes.tsx)
+
+### Filtros com componentes Mantine:
+```tsx
+<Group mb="md">
+  <MonthPickerInput value={mes} onChange={setMes} placeholder="Mês" />
+  <Select data={['Todos', 'Receitas', 'Despesas']} value={tipo} onChange={setTipo} />
+  <Select data={categorias} value={categoria} onChange={setCategoria} placeholder="Categoria" clearable />
+  <Button onClick={abrirModal} leftSection={<IconPlus />}>Nova Transação</Button>
+</Group>
+```
+
+### Tabela com `<Table striped highlightOnHover>`:
+- Colunas: Data | Descrição | Categoria | Tipo | Valor | Ações
+- `<Badge color="teal">Receita</Badge>` ou `<Badge color="red">Despesa</Badge>`
+- Botões de ação: `<ActionIcon variant="subtle">` com ícones de editar e lixeira
+
+### Modal Nova/Editar Transação — usar `useDisclosure` + `<Modal>`:
+```tsx
+const [opened, { open, close }] = useDisclosure(false)
+
+const form = useForm({
+  initialValues: { tipo: 'despesa', valor: '', descricao: '', categoria: '', data: new Date() },
+  validate: {
+    valor: (v) => (!v || Number(v) <= 0 ? 'Valor inválido' : null),
+    descricao: (v) => (!v ? 'Descrição obrigatória' : null),
+    categoria: (v) => (!v ? 'Selecione uma categoria' : null),
+  }
+})
+
+// Dentro do Modal:
+<SegmentedControl data={['receita', 'despesa']} {...form.getInputProps('tipo')} />
+<NumberInput
+  label="Valor"
+  placeholder="R$ 0,00"
+  prefix="R$ "
+  decimalSeparator=","
+  thousandSeparator="."
+  {...form.getInputProps('valor')}
+/>
+<TextInput label="Descrição" {...form.getInputProps('descricao')} />
+<Select
+  label="Categoria"
+  data={['Salário','Freelance','Investimentos','Alimentação','Transporte','Saúde','Educação','Lazer','Moradia','Outros']}
+  {...form.getInputProps('categoria')}
+/>
+<DateInput label="Data" {...form.getInputProps('data')} />
+```
+
+Salvar:
+```ts
+await supabase.from('transacoes').insert({
+  user_id: user.id,
+  tipo: form.values.tipo,
+  valor: form.values.valor,
+  descricao: form.values.descricao,
+  categoria: form.values.categoria,
+  data: form.values.data,
+})
+```
+
+---
+
+## 🎯 Metas (src/pages/Metas.tsx)
+
+### Grid de cards com `<SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}`:
+```tsx
+<Card withBorder radius="md" p="lg">
+  <Group justify="space-between" mb="xs">
+    <Text fw={600}>{meta.nome}</Text>
+    <Badge color={meta.concluida ? 'teal' : 'gray'}>
+      {meta.concluida ? 'Concluída' : 'Em andamento'}
+    </Badge>
+  </Group>
+
+  <Progress
+    value={(meta.valor_atual / meta.valor_alvo) * 100}
+    color={meta.concluida ? 'teal' : 'blue'}
+    size="lg"
+    radius="xl"
+    mb="xs"
+  />
+
+  <Group justify="space-between">
+    <Text size="sm" c="dimmed">R$ {meta.valor_atual} de R$ {meta.valor_alvo}</Text>
+    <Text size="sm" fw={500}>{Math.round((meta.valor_atual / meta.valor_alvo) * 100)}%</Text>
+  </Group>
+
+  {meta.data_limite && (
+    <Text size="xs" c="dimmed" mt="xs">Prazo: {formatDate(meta.data_limite)}</Text>
+  )}
+
+  <Group mt="md">
+    <Button size="xs" variant="light" onClick={() => abrirAdicionarValor(meta)}>
+      + Adicionar valor
+    </Button>
+    <ActionIcon variant="subtle" color="red" onClick={() => excluirMeta(meta.id)}>
+      <IconTrash size={16} />
+    </ActionIcon>
+  </Group>
+</Card>
+```
+
+### Resumo no topo com `<StatCard>` ou `<Paper>`:
+- Total de metas ativas
+- Valor total a poupar (soma dos alvos)
+- Total já guardado (soma dos valores_atual)
+
+### Modal Nova Meta:
+```tsx
+<TextInput label="Nome da meta" placeholder="Ex: Viagem para Europa" />
+<NumberInput label="Valor alvo" prefix="R$ " decimalSeparator="," thousandSeparator="." />
+<NumberInput label="Já tenho guardado" prefix="R$ " />
+<DateInput label="Data limite (opcional)" clearable />
+```
+
+---
+
+## 🎨 Tema e Estética
+
+```tsx
+// Em createTheme():
+{
+  primaryColor: 'teal',
+  fontFamily: 'Plus Jakarta Sans, sans-serif',  // importar do Google Fonts
+  defaultRadius: 'md',
+  defaultColorScheme: 'dark',
+  components: {
+    Paper: {
+      defaultProps: { shadow: 'sm' }
+    },
+    Button: {
+      defaultProps: { radius: 'md' }
+    }
+  }
+}
+```
+
+Adicionar no index.html:
+```html
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+```
+
+**Visual esperado:**
+- Fundo escuro profissional (#141414 / dark.9)
+- Cards com borda sutil e sombra leve
+- Cor de destaque: teal (verde-água) em botões, badges e gráficos
+- Tipografia limpa e moderna com Plus Jakarta Sans
+- Notificações com `@mantine/notifications` para feedback de ações
+
+---
+
+## 📁 Estrutura de pastas
+
+```
+src/
+  lib/
+    supabase.ts
+  contexts/
+    AuthContext.tsx
+  pages/
+    Login.tsx
+    Cadastro.tsx
+    RecuperarSenha.tsx
+    Dashboard.tsx
+    Transacoes.tsx
+    Metas.tsx
+  components/
+    Layout.tsx
+    PrivateRoute.tsx
+  App.tsx          ← configurar React Router aqui
+  main.tsx         ← configurar MantineProvider aqui
+```
+
+---
+
+## ✅ Regras de negócio
+
+1. Cada usuário só acessa seus próprios dados (garantido pelo RLS do Supabase)
+2. Saldo atual = soma histórica de todas receitas - soma histórica de todas despesas
+3. Valor de transação deve ser maior que zero
+4. Data padrão ao criar transação = dia atual
+5. Meta marcada como concluída automaticamente quando valor_atual >= valor_alvo
+6. Sempre incluir `user_id: user.id` ao inserir registros no Supabase
+7. Mostrar `<LoadingOverlay>` enquanto dados carregam do Supabase
+
+---
+
+Gere o projeto completo e funcional com foco em qualidade de código e visual profissional. Use APENAS componentes do Mantine — nenhum Tailwind, nenhum CSS inline desnecessário. Priorize: AuthContext, Layout com AppShell, Dashboard com cards e gráficos, e Modal de transação.
