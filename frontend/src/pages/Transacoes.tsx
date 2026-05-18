@@ -62,7 +62,7 @@ export default function Transacoes() {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   // Filters
-  const [mesFiltro, setMesFiltro] = useState<Date | null>(new Date());
+  const [mesFiltro, setMesFiltro] = useState<string | null>(dayjs().format('YYYY-MM-DD'));
   const [tipoFiltro, setTipoFiltro] = useState<string | null>('Todos');
   const [categoriaFiltro, setCategoriaFiltro] = useState<string | null>(null);
 
@@ -283,7 +283,7 @@ export default function Transacoes() {
             label="Mês"
             placeholder="Selecionar mês"
             value={mesFiltro}
-            onChange={(value: Date | null) => setMesFiltro(value)}
+            onChange={setMesFiltro}
             clearable
             w={180}
             size="sm"
