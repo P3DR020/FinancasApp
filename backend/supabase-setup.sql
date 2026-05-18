@@ -22,6 +22,7 @@ CREATE TABLE metas (
   nome TEXT NOT NULL,
   valor_alvo NUMERIC(10,2) NOT NULL CHECK (valor_alvo > 0),
   valor_atual NUMERIC(10,2) DEFAULT 0,
+  local_guardado TEXT,
   data_limite DATE,
   concluida BOOLEAN DEFAULT false,
   criado_em TIMESTAMPTZ DEFAULT now()

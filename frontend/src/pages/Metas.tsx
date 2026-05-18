@@ -15,6 +15,7 @@ import {
   Stack,
   TextInput,
   NumberInput,
+  Select,
   LoadingOverlay,
   ThemeIcon,
   Tooltip,
@@ -30,6 +31,7 @@ import {
   IconCoin,
   IconTrophy,
   IconCoinOff,
+  IconBuildingBank,
 } from '@tabler/icons-react';
 import dayjs from 'dayjs';
 import { supabase } from '../lib/supabase';
@@ -40,9 +42,29 @@ interface Meta {
   nome: string;
   valor_alvo: number;
   valor_atual: number;
+  local_guardado: string | null;
   data_limite: string | null;
   concluida: boolean;
 }
+
+const locaisGuardado = [
+  'Cofrinho',
+  'Nubank',
+  'Mercado Pago',
+  'Santander',
+  'Itaú',
+  'Bradesco',
+  'Banco do Brasil',
+  'Caixa',
+  'Inter',
+  'C6 Bank',
+  'PicPay',
+  'PagBank',
+  'Carteira',
+  'Poupança',
+  'Investimento',
+  'Outro',
+];
 
 export default function Metas() {
   const { user } = useAuth();
@@ -58,6 +80,7 @@ export default function Metas() {
       nome: '',
       valor_alvo: '' as number | '',
       valor_atual: '' as number | '',
+      local_guardado: '' as string,
       data_limite: null as Date | null,
     },
     validate: {
@@ -103,6 +126,7 @@ export default function Metas() {
       nome: values.nome,
       valor_alvo: valorAlvo,
       valor_atual: valorAtual,
+      local_guardado: values.local_guardado || null,
       data_limite: values.data_limite
         ? dayjs(values.data_limite).format('YYYY-MM-DD')
         : null,
@@ -359,6 +383,18 @@ export default function Metas() {
                   </Text>
                 </Group>
 
+                {meta.local_guardado && (
+                  <Badge
+                    variant="light"
+                    color="violet"
+                    size="sm"
+                    mb="xs"
+                    leftSection={<IconBuildingBank size={12} />}
+                  >
+                    {meta.local_guardado}
+                  </Badge>
+                )}
+
                 {meta.data_limite && (
                   <Text size="xs" c="dimmed" mb="xs">
                     Prazo: {dayjs(meta.data_limite).format('DD/MM/YYYY')}
@@ -460,6 +496,18 @@ export default function Metas() {
               decimalScale={2}
               size="md"
               {...form.getInputProps('valor_atual')}
+            />
+
+            <Select
+              id="meta-local-guardado"
+              label="Onde está guardado?"
+              placeholder="Ex: Nubank, Cofrinho..."
+              data={locaisGuardado}
+              searchable
+              clearable
+              size="md"
+              leftSection={<IconBuildingBank size={16} />}
+              {...form.getInputProps('local_guardado')}
             />
 
             <DateInput
