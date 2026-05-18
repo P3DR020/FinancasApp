@@ -1,0 +1,141 @@
+/* ===================================
+   FinançasApp — Global Styles
+   =================================== */
+
+/* Reset & Base */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100vh;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* Scrollbar custom (dark theme) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--mantine-color-dark-8);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--mantine-color-dark-4);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--mantine-color-dark-3);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Utility classes */
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Stat card gradient borders */
+.stat-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 4px 4px 0 0;
+}
+
+.stat-card.stat-teal::before {
+  background: linear-gradient(90deg, var(--mantine-color-teal-5), var(--mantine-color-teal-3));
+}
+
+.stat-card.stat-red::before {
+  background: linear-gradient(90deg, var(--mantine-color-red-5), var(--mantine-color-red-3));
+}
+
+.stat-card.stat-blue::before {
+  background: linear-gradient(90deg, var(--mantine-color-blue-5), var(--mantine-color-blue-3));
+}
+
+.stat-card.stat-yellow::before {
+  background: linear-gradient(90deg, var(--mantine-color-yellow-5), var(--mantine-color-yellow-3));
+}
+
+/* Auth pages background */
+.auth-bg {
+  min-height: 100vh;
+  background: radial-gradient(ellipse at top, var(--mantine-color-dark-7) 0%, var(--mantine-color-dark-9) 70%);
+}
+
+/* Logo styling */
+.app-logo {
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, var(--mantine-color-teal-4), var(--mantine-color-teal-6));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Table row animation */
+.table-row-enter {
+  animation: fadeInUp 0.3s ease-out forwards;
+}
+
+/* Progress bar glow */
+.progress-glow {
+  box-shadow: 0 0 8px rgba(32, 201, 151, 0.3);
+}
