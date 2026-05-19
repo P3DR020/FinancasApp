@@ -19,6 +19,7 @@ import {
   IconTargetArrow,
   IconChartLine,
   IconRepeat,
+  IconCreditCard,
   IconLogout,
   IconUser,
   IconWallet,
@@ -32,6 +33,7 @@ const navItems = [
   { label: 'Investimentos', icon: IconChartLine, path: '/investimentos' },
   { label: 'Fixos', icon: IconRepeat, path: '/fixos' },
   { label: 'Metas', icon: IconTargetArrow, path: '/metas' },
+  { label: 'Cartões', icon: IconCreditCard, path: '/cartoes' },
 ];
 
 export default function Layout() {
