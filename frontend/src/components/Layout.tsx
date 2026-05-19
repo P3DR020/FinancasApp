@@ -17,6 +17,8 @@ import {
   IconLayoutDashboard,
   IconArrowsExchange,
   IconTargetArrow,
+  IconChartLine,
+  IconRepeat,
   IconLogout,
   IconUser,
   IconWallet,
@@ -27,6 +29,8 @@ import { useAuth } from '../contexts/AuthContext';
 const navItems = [
   { label: 'Dashboard', icon: IconLayoutDashboard, path: '/dashboard' },
   { label: 'Transações', icon: IconArrowsExchange, path: '/transacoes' },
+  { label: 'Investimentos', icon: IconChartLine, path: '/investimentos' },
+  { label: 'Fixos', icon: IconRepeat, path: '/fixos' },
   { label: 'Metas', icon: IconTargetArrow, path: '/metas' },
 ];
 

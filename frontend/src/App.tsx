@@ -8,6 +8,8 @@ import RecuperarSenha from './pages/RecuperarSenha';
 import Dashboard from './pages/Dashboard';
 import Transacoes from './pages/Transacoes';
 import Metas from './pages/Metas';
+import Investimentos from './pages/Investimentos';
+import Fixos from './pages/Fixos';
 
 export default function App() {
   return (
@@ -29,6 +31,8 @@ export default function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/transacoes" element={<Transacoes />} />
           <Route path="/metas" element={<Metas />} />
+          <Route path="/investimentos" element={<Investimentos />} />
+          <Route path="/fixos" element={<Fixos />} />
         </Route>
 
         {/* Default redirect */}

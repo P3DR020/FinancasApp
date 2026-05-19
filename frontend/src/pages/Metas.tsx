@@ -320,6 +320,106 @@ export default function Metas() {
         ))}
       </SimpleGrid>
 
+      {/* Where is my money? */}
+      {(() => {
+        // Aggregate money by location
+        const porLocal: Record<string, number> = {};
+        metas.forEach((m) => {
+          if (m.local_guardado && Number(m.valor_atual) > 0) {
+            porLocal[m.local_guardado] =
+              (porLocal[m.local_guardado] || 0) + Number(m.valor_atual);
+          }
+        });
+        const locais = Object.entries(porLocal).sort((a, b) => b[1] - a[1]);
+
+        if (locais.length === 0) return null;
+
+        const localColors: Record<string, { color: string; emoji: string }> = {
+          'Nubank': { color: 'grape', emoji: '💜' },
+          'Santander': { color: 'red', emoji: '🔴' },
+          'Itaú': { color: 'orange', emoji: '🟠' },
+          'Bradesco': { color: 'red', emoji: '🏦' },
+          'Banco do Brasil': { color: 'yellow', emoji: '💛' },
+          'Caixa': { color: 'blue', emoji: '🔵' },
+          'Inter': { color: 'orange', emoji: '🧡' },
+          'C6 Bank': { color: 'dark', emoji: '⚫' },
+          'Mercado Pago': { color: 'blue', emoji: '🤝' },
+          'PicPay': { color: 'green', emoji: '💚' },
+          'PagBank': { color: 'yellow', emoji: '💰' },
+          'Cofrinho': { color: 'pink', emoji: '🐷' },
+          'Carteira': { color: 'brown', emoji: '👛' },
+          'Poupança': { color: 'teal', emoji: '🏦' },
+          'Investimento': { color: 'indigo', emoji: '📈' },
+        };
+
+        const getLocalStyle = (name: string) =>
+          localColors[name] || { color: 'gray', emoji: '🏦' };
+
+        return (
+          <Paper
+            withBorder
+            p="lg"
+            radius="md"
+            mb="xl"
+            className="animate-fade-in-up"
+            style={{
+              animationDelay: '0.3s',
+              borderColor: 'var(--mantine-color-dark-4)',
+            }}
+          >
+            <Group justify="space-between" mb="md">
+              <Group gap="xs">
+                <ThemeIcon variant="light" color="violet" size="md" radius="xl">
+                  <IconBuildingBank size={18} />
+                </ThemeIcon>
+                <Text fw={600} size="lg">
+                  Onde está meu dinheiro?
+                </Text>
+              </Group>
+              <Badge variant="light" color="teal" size="lg" style={{ padding: '8px 12px' }}>
+                Total: {formatCurrency(totalGuardado)}
+              </Badge>
+            </Group>
+
+            <SimpleGrid cols={{ base: 2, sm: 3, lg: 4 }}>
+              {locais.map(([local, valor], i) => {
+                const style = getLocalStyle(local);
+                const pct = totalGuardado > 0 ? Math.round((valor / totalGuardado) * 100) : 0;
+
+                return (
+                  <Paper
+                    key={local}
+                    withBorder
+                    p="md"
+                    radius="md"
+                    className="card-hover animate-fade-in-up"
+                    style={{
+                      animationDelay: `${0.35 + i * 0.05}s`,
+                      borderColor: `var(--mantine-color-${style.color}-7)`,
+                      borderWidth: 1,
+                      background: `var(--mantine-color-dark-7)`,
+                    }}
+                  >
+                    <Group gap="xs" mb={6}>
+                      <Text size="xl" lh={1}>{style.emoji}</Text>
+                      <Text size="sm" fw={600} lineClamp={1}>
+                        {local}
+                      </Text>
+                    </Group>
+                    <Text size="lg" fw={700} c={style.color}>
+                      {formatCurrency(valor)}
+                    </Text>
+                    <Text size="xs" c="dimmed">
+                      {pct}% do total
+                    </Text>
+                  </Paper>
+                );
+              })}
+            </SimpleGrid>
+          </Paper>
+        );
+      })()}
+
       {/* Goals Grid */}
       {metas.length > 0 ? (
         <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
