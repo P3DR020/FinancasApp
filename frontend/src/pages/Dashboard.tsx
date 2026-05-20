@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   SimpleGrid,
@@ -31,6 +31,7 @@ import {
   IconCoin,
 } from '@tabler/icons-react';
 import dayjs from 'dayjs';
+import { notifications } from '@mantine/notifications';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -112,13 +113,81 @@ export default function Dashboard() {
   const [fixos, setFixos] = useState<Fixo[]>([]);
   const [metas, setMetas] = useState<Meta[]>([]);
   const [investimentos, setInvestimentos] = useState<Investimento[]>([]);
+  const autoGenRan = useRef(false);
 
   useEffect(() => {
     if (user) fetchData();
   }, [user]);
 
+  // Gera transações automáticas a partir dos fixos ativos
+  const gerarTransacoesFixas = async () => {
+    if (!user || autoGenRan.current) return;
+    autoGenRan.current = true;
+
+    const inicioMes = dayjs().startOf('month').format('YYYY-MM-DD');
+    const fimMes = dayjs().endOf('month').format('YYYY-MM-DD');
+
+    // Buscar fixos ativos
+    const { data: fixosAtivos } = await supabase
+      .from('fixos')
+      .select('id, nome, tipo, valor, categoria, dia_vencimento')
+      .eq('ativo', true);
+
+    if (!fixosAtivos || fixosAtivos.length === 0) return;
+
+    // Buscar transações já geradas de fixos neste mês
+    const { data: jaGeradas } = await supabase
+      .from('transacoes')
+      .select('fixo_id')
+      .not('fixo_id', 'is', null)
+      .gte('data', inicioMes)
+      .lte('data', fimMes);
+
+    const idsJaGerados = new Set((jaGeradas || []).map((t) => t.fixo_id));
+
+    // Filtrar os que ainda não foram gerados
+    const pendentes = fixosAtivos.filter((f) => !idsJaGerados.has(f.id));
+
+    if (pendentes.length === 0) return;
+
+    // Criar transações
+    const novasTransacoes = pendentes.map((f) => {
+      const dia = f.dia_vencimento || dayjs().date();
+      const dataTransacao = dayjs().startOf('month').date(Math.min(dia, dayjs().daysInMonth())).format('YYYY-MM-DD');
+      return {
+        user_id: user.id,
+        tipo: f.tipo,
+        valor: Number(f.valor),
+        descricao: `${f.nome} (fixo)`,
+        categoria: f.categoria,
+        data: dataTransacao,
+        fixo_id: f.id,
+      };
+    });
+
+    const { error } = await supabase.from('transacoes').insert(novasTransacoes);
+
+    if (!error) {
+      const qtdReceitas = pendentes.filter((f) => f.tipo === 'receita').length;
+      const qtdDespesas = pendentes.filter((f) => f.tipo === 'despesa').length;
+      const partes = [];
+      if (qtdReceitas > 0) partes.push(`${qtdReceitas} receita(s)`);
+      if (qtdDespesas > 0) partes.push(`${qtdDespesas} despesa(s)`);
+
+      notifications.show({
+        title: '🔄 Transações fixas geradas!',
+        message: `${partes.join(' e ')} geradas automaticamente para ${dayjs().format('MMMM/YYYY')}.`,
+        color: 'teal',
+        autoClose: 6000,
+      });
+    }
+  };
+
   const fetchData = async () => {
     setLoading(true);
+
+    // Gerar transações fixas antes de carregar dados
+    await gerarTransacoesFixas();
 
     const inicioMes = dayjs().startOf('month').format('YYYY-MM-DD');
     const fimMes = dayjs().endOf('month').format('YYYY-MM-DD');
@@ -248,10 +317,10 @@ export default function Dashboard() {
   const rendimentoTotal = totalAtualInv - totalInvestido;
 
   const statCards = [
-    { title: 'Receitas do mês', value: receitasMes, color: 'teal', cssClass: 'stat-teal', icon: IconArrowUpRight },
-    { title: 'Despesas do mês', value: despesasMes, color: 'red', cssClass: 'stat-red', icon: IconArrowDownRight },
-    { title: 'Saldo total', value: saldoTotal, color: 'blue', cssClass: 'stat-blue', icon: IconWallet },
-    { title: 'Economia do mês', value: economiaMes, color: 'yellow', cssClass: 'stat-yellow', icon: IconPigMoney },
+    { title: 'Receitas do mês', value: receitasMes, sub: `Inclui ${receitasFixas.length} fixo(s) gerado(s)`, color: 'teal', cssClass: 'stat-teal', icon: IconArrowUpRight },
+    { title: 'Despesas do mês', value: despesasMes, sub: `Inclui ${despesasFixas.length} fixo(s) gerado(s)`, color: 'red', cssClass: 'stat-red', icon: IconArrowDownRight },
+    { title: 'Saldo total', value: saldoTotal, sub: 'Todas as transações', color: 'blue', cssClass: 'stat-blue', icon: IconWallet },
+    { title: 'Economia do mês', value: economiaMes, sub: 'Receitas - Despesas', color: 'yellow', cssClass: 'stat-yellow', icon: IconPigMoney },
   ];
 
   return (
@@ -299,6 +368,9 @@ export default function Dashboard() {
             <Text size="xl" fw={700} c={card.color}>
               {formatCurrency(card.value)}
             </Text>
+            {card.sub && (
+              <Text size="xs" c="dimmed" mt={2}>{card.sub}</Text>
+            )}
           </Paper>
         ))}
       </SimpleGrid>
@@ -355,42 +427,74 @@ export default function Dashboard() {
 
           {fixos.length > 0 ? (
             <Stack gap="md">
+              {/* Resumo mensal */}
               <SimpleGrid cols={3}>
                 <div>
-                  <Text size="xs" c="dimmed" tt="uppercase" fw={500}>Receitas</Text>
+                  <Text size="xs" c="dimmed" tt="uppercase" fw={500}>Receitas/mês</Text>
                   <Text size="lg" fw={700} c="teal">{formatCurrency(totalReceitasFixas)}</Text>
                   <Text size="xs" c="dimmed">{receitasFixas.length} ativas</Text>
                 </div>
                 <div>
-                  <Text size="xs" c="dimmed" tt="uppercase" fw={500}>Despesas</Text>
+                  <Text size="xs" c="dimmed" tt="uppercase" fw={500}>Despesas/mês</Text>
                   <Text size="lg" fw={700} c="red">{formatCurrency(totalDespesasFixas)}</Text>
                   <Text size="xs" c="dimmed">{despesasFixas.length} ativas</Text>
                 </div>
                 <div>
-                  <Text size="xs" c="dimmed" tt="uppercase" fw={500}>Sobra</Text>
+                  <Text size="xs" c="dimmed" tt="uppercase" fw={500}>Sobra mensal</Text>
                   <Text size="lg" fw={700} c={sobraFixa >= 0 ? 'blue' : 'red'}>{formatCurrency(sobraFixa)}</Text>
-                  <Text size="xs" c="dimmed">mensal</Text>
+                  <Text size="xs" c="dimmed">{dayjs().format('MMMM/YYYY')}</Text>
                 </div>
               </SimpleGrid>
 
-              <Stack gap={6}>
-                {fixos.filter(f => f.ativo).slice(0, 4).map((f) => (
-                  <Group key={f.id} justify="space-between" py={4} style={{ borderBottom: '1px solid var(--mantine-color-dark-5)' }}>
-                    <Group gap="xs">
-                      <ThemeIcon variant="light" color={f.tipo === 'receita' ? 'teal' : 'red'} size="xs" radius="xl">
-                        {f.tipo === 'receita' ? <IconArrowUpRight size={10} /> : <IconArrowDownRight size={10} />}
-                      </ThemeIcon>
-                      <Text size="sm">{f.nome}</Text>
-                    </Group>
-                    <Text size="sm" fw={600} c={f.tipo === 'receita' ? 'teal' : 'red'}>
-                      {formatCurrency(Number(f.valor))}
-                    </Text>
+              {/* Receitas fixas */}
+              {receitasFixas.length > 0 && (
+                <>
+                  <Group gap={6}>
+                    <ThemeIcon variant="light" color="teal" size="xs" radius="xl">
+                      <IconArrowUpRight size={10} />
+                    </ThemeIcon>
+                    <Text size="xs" fw={600} c="teal" tt="uppercase">Receitas fixas</Text>
+                    <Badge color="teal" variant="light" size="xs" ml="auto">{formatCurrency(totalReceitasFixas)}/mês</Badge>
                   </Group>
-                ))}
-                {fixos.filter(f => f.ativo).length > 4 && (
-                  <Text size="xs" c="dimmed" ta="center">+{fixos.filter(f => f.ativo).length - 4} mais...</Text>
-                )}
-              </Stack>
+                  <Stack gap={4}>
+                    {receitasFixas.map((f) => (
+                      <Group key={f.id} justify="space-between" py={3} px={6}
+                        style={{ borderRadius: 6, background: 'var(--mantine-color-dark-7)' }}>
+                        <Group gap="xs">
+                          <Text size="sm">{f.nome}</Text>
+                          <Text size="xs" c="dimmed">({f.categoria})</Text>
+                        </Group>
+                        <Text size="sm" fw={600} c="teal">+{formatCurrency(Number(f.valor))}</Text>
+                      </Group>
+                    ))}
+                  </Stack>
+                </>
+              )}
+
+              {/* Despesas fixas */}
+              {despesasFixas.length > 0 && (
+                <>
+                  <Group gap={6}>
+                    <ThemeIcon variant="light" color="red" size="xs" radius="xl">
+                      <IconArrowDownRight size={10} />
+                    </ThemeIcon>
+                    <Text size="xs" fw={600} c="red" tt="uppercase">Despesas fixas</Text>
+                    <Badge color="red" variant="light" size="xs" ml="auto">{formatCurrency(totalDespesasFixas)}/mês</Badge>
+                  </Group>
+                  <Stack gap={4}>
+                    {despesasFixas.map((f) => (
+                      <Group key={f.id} justify="space-between" py={3} px={6}
+                        style={{ borderRadius: 6, background: 'var(--mantine-color-dark-7)' }}>
+                        <Group gap="xs">
+                          <Text size="sm">{f.nome}</Text>
+                          <Text size="xs" c="dimmed">({f.categoria})</Text>
+                        </Group>
+                        <Text size="sm" fw={600} c="red">-{formatCurrency(Number(f.valor))}</Text>
+                      </Group>
+                    ))}
+                  </Stack>
+                </>
+              )}
             </Stack>
           ) : (
             <Stack align="center" py="lg">
