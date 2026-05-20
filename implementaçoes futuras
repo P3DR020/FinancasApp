@@ -18,5 +18,5 @@ Alertas/Lembretes	-- Notificações de contas vencendo, orçamento estourando, m
 Gráfico de evolução patrimonial	-- Linha do tempo mostrando a evolução do seu patrimônio mês a mês
 Importar extrato bancário	-- Upload de CSV/OFX do banco para lançar transações automaticamente
 Categorias customizáveis	-- Criar suas próprias categorias ao invés de usar as fixas
-Tags/Etiquetas	-- Adicionar tags extras nas transações (ex: "viagem SP", "presente Maria")
+//Tags/Etiquetas	-- Adicionar tags extras nas transações (ex: "viagem SP", "presente Maria")
 Modo claro/escuro	-- Toggle de tema

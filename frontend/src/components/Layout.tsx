@@ -138,7 +138,7 @@ export default function Layout() {
 
             <Menu.Dropdown>
               <Menu.Label>Conta</Menu.Label>
-              <Menu.Item leftSection={<IconUser size={14} />}>
+              <Menu.Item leftSection={<IconUser size={14} />} onClick={() => navigate('/perfil')}>
                 Perfil
               </Menu.Item>
               <Menu.Divider />

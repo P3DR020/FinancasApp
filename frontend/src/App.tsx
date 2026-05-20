@@ -12,6 +12,7 @@ import Investimentos from './pages/Investimentos';
 import Fixos from './pages/Fixos';
 import Cartoes from './pages/Cartoes';
 import Orcamento from './pages/Orcamento';
+import Perfil from './pages/Perfil';
 
 export default function App() {
   return (
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="/fixos" element={<Fixos />} />
           <Route path="/cartoes" element={<Cartoes />} />
           <Route path="/orcamento" element={<Orcamento />} />
+          <Route path="/perfil" element={<Perfil />} />
         </Route>
 
         {/* Default redirect */}
