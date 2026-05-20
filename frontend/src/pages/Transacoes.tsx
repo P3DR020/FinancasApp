@@ -12,6 +12,7 @@ import {
   Modal,
   Stack,
   TextInput,
+  TagsInput,
   NumberInput,
   Select,
   SegmentedControl,
@@ -27,6 +28,7 @@ import {
   IconEdit,
   IconTrash,
   IconFilter,
+  IconTag,
 } from '@tabler/icons-react';
 import dayjs from 'dayjs';
 import { supabase } from '../lib/supabase';
@@ -39,6 +41,7 @@ interface Transacao {
   descricao: string;
   categoria: string;
   data: string;
+  tags: string[];
 }
 
 const categorias = [
@@ -65,6 +68,7 @@ export default function Transacoes() {
   const [mesFiltro, setMesFiltro] = useState<string | null>(dayjs().format('YYYY-MM-DD'));
   const [tipoFiltro, setTipoFiltro] = useState<string | null>('Todos');
   const [categoriaFiltro, setCategoriaFiltro] = useState<string | null>(null);
+  const [tagFiltro, setTagFiltro] = useState<string | null>(null);
 
   const form = useForm({
     initialValues: {
@@ -73,6 +77,7 @@ export default function Transacoes() {
       descricao: '',
       categoria: '',
       data: new Date(),
+      tags: [] as string[],
     },
     validate: {
       valor: (v) => (!v || Number(v) <= 0 ? 'Valor deve ser maior que zero' : null),
@@ -108,6 +113,11 @@ export default function Transacoes() {
       query = query.eq('categoria', categoriaFiltro);
     }
 
+    // Tag filter
+    if (tagFiltro) {
+      query = query.contains('tags', [tagFiltro]);
+    }
+
     const { data, error } = await query;
 
     if (error) {
@@ -121,7 +131,7 @@ export default function Transacoes() {
     }
 
     setLoading(false);
-  }, [user, mesFiltro, tipoFiltro, categoriaFiltro]);
+  }, [user, mesFiltro, tipoFiltro, categoriaFiltro, tagFiltro]);
 
   useEffect(() => {
     fetchTransacoes();
@@ -142,6 +152,7 @@ export default function Transacoes() {
       descricao: t.descricao,
       categoria: t.categoria,
       data: new Date(t.data + 'T12:00:00'),
+      tags: t.tags || [],
     });
     open();
   };
@@ -156,6 +167,7 @@ export default function Transacoes() {
       descricao: values.descricao,
       categoria: values.categoria,
       data: dayjs(values.data).format('YYYY-MM-DD'),
+      tags: values.tags || [],
     };
 
     if (editingId) {
@@ -306,6 +318,17 @@ export default function Transacoes() {
             w={180}
             size="sm"
           />
+          <Select
+            label="Tag"
+            data={[...new Set(transacoes.flatMap((t) => t.tags || []))]}
+            value={tagFiltro}
+            onChange={setTagFiltro}
+            clearable
+            placeholder="Todas"
+            w={160}
+            size="sm"
+            leftSection={<IconTag size={14} />}
+          />
         </Group>
       </Paper>
 
@@ -356,6 +379,7 @@ export default function Transacoes() {
                 <Table.Th>Descrição</Table.Th>
                 <Table.Th>Categoria</Table.Th>
                 <Table.Th>Tipo</Table.Th>
+                <Table.Th>Tags</Table.Th>
                 <Table.Th style={{ textAlign: 'right' }}>Valor</Table.Th>
                 <Table.Th style={{ textAlign: 'center' }}>Ações</Table.Th>
               </Table.Tr>
@@ -384,6 +408,15 @@ export default function Transacoes() {
                     >
                       {t.tipo === 'receita' ? 'Receita' : 'Despesa'}
                     </Badge>
+                  </Table.Td>
+                  <Table.Td>
+                    <Group gap={4}>
+                      {(t.tags || []).map((tag) => (
+                        <Badge key={tag} variant="dot" color="grape" size="xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </Group>
                   </Table.Td>
                   <Table.Td style={{ textAlign: 'right' }}>
                     <Text
@@ -498,6 +531,14 @@ export default function Transacoes() {
               size="md"
               valueFormat="DD/MM/YYYY"
               {...form.getInputProps('data')}
+            />
+
+            <TagsInput
+              label="Tags / Etiquetas"
+              placeholder="Digite e pressione Enter"
+              size="md"
+              clearable
+              {...form.getInputProps('tags')}
             />
 
             <Group justify="flex-end" mt="sm">
