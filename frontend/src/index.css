@@ -114,6 +114,10 @@ body {
   background: linear-gradient(90deg, var(--mantine-color-yellow-5), var(--mantine-color-yellow-3));
 }
 
+.stat-card.stat-violet::before {
+  background: linear-gradient(90deg, var(--mantine-color-violet-5), var(--mantine-color-violet-3));
+}
+
 /* Auth pages background */
 .auth-bg {
   min-height: 100vh;
