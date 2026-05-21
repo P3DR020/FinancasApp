@@ -11,7 +11,8 @@ import { notifications } from '@mantine/notifications';
 import {
   IconPlus, IconEdit, IconTrash, IconReceipt2, IconCheck,
   IconCalendarDue, IconCoin, IconCoinOff, IconClock,
-  IconShoppingBag, IconCircleCheck,
+  IconShoppingBag, IconCircleCheck, IconCreditCard,
+  IconCash, IconTransfer, IconFileInvoice, IconQrcode,
 } from '@tabler/icons-react';
 import dayjs from 'dayjs';
 import { supabase } from '../lib/supabase';
@@ -29,6 +30,12 @@ interface Parcelamento {
   dia_vencimento: number;
   notas: string | null;
   concluido: boolean;
+  metodo_pagamento: string;
+  cartao_id: string | null;
+}
+
+interface Cartao {
+  id: string; nome: string; bandeira: string; cor: string; ativo: boolean;
 }
 
 const categorias = [
@@ -36,10 +43,29 @@ const categorias = [
   'Educação', 'Veículo', 'Viagem', 'Casa', 'Lazer', 'Outro',
 ];
 
+const metodosPagamento = [
+  { value: 'cartao', label: '💳 Cartão de Crédito' },
+  { value: 'pix', label: '📱 PIX' },
+  { value: 'boleto', label: '📄 Boleto' },
+  { value: 'dinheiro', label: '💵 Dinheiro' },
+  { value: 'transferencia', label: '🏦 Transferência' },
+];
+
+const metodoIcons: Record<string, typeof IconCreditCard> = {
+  cartao: IconCreditCard, pix: IconQrcode, boleto: IconFileInvoice,
+  dinheiro: IconCash, transferencia: IconTransfer,
+};
+
+const metodoLabels: Record<string, string> = {
+  cartao: 'Cartão', pix: 'PIX', boleto: 'Boleto',
+  dinheiro: 'Dinheiro', transferencia: 'Transferência',
+};
+
 export default function Parcelamentos() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [parcelamentos, setParcelamentos] = useState<Parcelamento[]>([]);
+  const [cartoes, setCartoes] = useState<Cartao[]>([]);
   const [formOpened, { open: openForm, close: closeForm }] = useDisclosure(false);
   const [payOpened, { open: openPay, close: closePay }] = useDisclosure(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -55,6 +81,8 @@ export default function Parcelamentos() {
       dia_vencimento: '' as number | '',
       notas: '',
       parcelas_pagas: 0 as number,
+      metodo_pagamento: 'boleto',
+      cartao_id: '' as string,
     },
     validate: {
       descricao: (v) => (!v.trim() ? 'Descrição é obrigatória' : null),
@@ -68,17 +96,18 @@ export default function Parcelamentos() {
   const fetchData = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    const { data, error } = await supabase
-      .from('parcelamentos')
-      .select('*')
-      .order('concluido', { ascending: true })
-      .order('criado_em', { ascending: false });
-
+    const [{ data: parcData, error }, { data: cartData }] = await Promise.all([
+      supabase.from('parcelamentos').select('*')
+        .order('concluido', { ascending: true })
+        .order('criado_em', { ascending: false }),
+      supabase.from('cartoes').select('id, nome, bandeira, cor, ativo').order('nome'),
+    ]);
     if (error) {
       notifications.show({ title: 'Erro ao carregar', message: error.message, color: 'red' });
     } else {
-      setParcelamentos(data || []);
+      setParcelamentos(parcData || []);
     }
+    setCartoes(cartData || []);
     setLoading(false);
   }, [user]);
 
@@ -102,6 +131,8 @@ export default function Parcelamentos() {
       dia_vencimento: p.dia_vencimento,
       notas: p.notas || '',
       parcelas_pagas: p.parcelas_pagas,
+      metodo_pagamento: p.metodo_pagamento || 'boleto',
+      cartao_id: p.cartao_id || '',
     });
     openForm();
   };
@@ -121,6 +152,8 @@ export default function Parcelamentos() {
       dia_vencimento: Number(values.dia_vencimento),
       notas: values.notas || null,
       concluido: parcPagas >= parcTotal,
+      metodo_pagamento: values.metodo_pagamento,
+      cartao_id: values.metodo_pagamento === 'cartao' && values.cartao_id ? values.cartao_id : null,
     };
     if (editingId) {
       const { error } = await supabase.from('parcelamentos').update(payload).eq('id', editingId);
@@ -145,17 +178,32 @@ export default function Parcelamentos() {
   const handleOpenPay = (p: Parcelamento) => { setPayingItem(p); openPay(); };
 
   const handlePay = async () => {
-    if (!payingItem) return;
+    if (!payingItem || !user) return;
     const novasPagas = payingItem.parcelas_pagas + 1;
     const concluido = novasPagas >= payingItem.parcelas_total;
+
+    // 1. Atualizar parcelas pagas
     const { error } = await supabase.from('parcelamentos')
       .update({ parcelas_pagas: novasPagas, concluido })
       .eq('id', payingItem.id);
     if (error) { notifications.show({ title: 'Erro', message: error.message, color: 'red' }); return; }
+
+    // 2. Criar transação de despesa automaticamente
+    const valorParcela = Number(payingItem.valor_parcela);
+    await supabase.from('transacoes').insert({
+      user_id: user.id,
+      tipo: 'despesa',
+      valor: valorParcela,
+      descricao: `${payingItem.descricao} (parcela ${novasPagas}/${payingItem.parcelas_total})`,
+      categoria: payingItem.categoria,
+      data: dayjs().format('YYYY-MM-DD'),
+      tags: ['parcelamento'],
+    });
+
     if (concluido) {
       notifications.show({ title: '🎉 Parcelamento quitado!', message: `"${payingItem.descricao}" totalmente pago!`, color: 'teal' });
     } else {
-      notifications.show({ title: 'Parcela paga!', message: `Parcela ${novasPagas}/${payingItem.parcelas_total} registrada.`, color: 'teal' });
+      notifications.show({ title: 'Parcela paga!', message: `Parcela ${novasPagas}/${payingItem.parcelas_total} — ${fmt(valorParcela)} registrado como despesa.`, color: 'teal' });
     }
     closePay();
     setPayingItem(null);
@@ -268,6 +316,18 @@ export default function Parcelamentos() {
                     {p.concluido ? 'Quitado' : p.categoria}
                   </Badge>
                 </Group>
+
+                {/* Payment method badge */}
+                {(() => {
+                  const MetIcon = metodoIcons[p.metodo_pagamento] || IconFileInvoice;
+                  const cartao = p.cartao_id ? cartoes.find(c => c.id === p.cartao_id) : null;
+                  return (
+                    <Badge variant="outline" color="gray" size="sm" mb="xs"
+                      leftSection={<MetIcon size={12} />}>
+                      {cartao ? `${cartao.nome}` : metodoLabels[p.metodo_pagamento] || p.metodo_pagamento}
+                    </Badge>
+                  );
+                })()}
 
                 <Progress value={pct} color={p.concluido ? 'teal' : 'violet'} size="lg" radius="xl" mb="xs"
                   animated={!p.concluido} className={p.concluido ? '' : 'progress-glow'} />
@@ -434,6 +494,13 @@ export default function Parcelamentos() {
             )}
             <Select label="Categoria" placeholder="Selecione" data={categorias} size="md"
               {...form.getInputProps('categoria')} />
+            <Select label="Método de pagamento" placeholder="Selecione" data={metodosPagamento} size="md"
+              {...form.getInputProps('metodo_pagamento')} />
+            {form.values.metodo_pagamento === 'cartao' && (
+              <Select label="Cartão" placeholder="Selecione o cartão"
+                data={cartoes.filter(c => c.ativo).map(c => ({ value: c.id, label: `💳 ${c.nome}` }))}
+                size="md" {...form.getInputProps('cartao_id')} />
+            )}
             <SimpleGrid cols={2}>
               <DateInput label="Data 1ª parcela" size="md" valueFormat="DD/MM/YYYY"
                 {...form.getInputProps('data_primeira_parcela')} />
