@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import {
   Box, Button, Group, Paper, SimpleGrid, Text, Title, Badge, ActionIcon,
   Modal, Stack, NumberInput, Select, LoadingOverlay, ThemeIcon, Tooltip,
-  Divider, Progress, RingProgress,
+  Divider, Progress,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';

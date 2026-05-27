@@ -14,7 +14,6 @@ import {
   LoadingOverlay,
   ThemeIcon,
   Progress,
-  RingProgress,
 } from '@mantine/core';
 import { DonutChart, BarChart } from '@mantine/charts';
 import {
@@ -26,9 +25,6 @@ import {
   IconRepeat,
   IconTargetArrow,
   IconChartLine,
-  IconTrendingUp,
-  IconTrendingDown,
-  IconCoin,
 } from '@tabler/icons-react';
 import dayjs from 'dayjs';
 import { notifications } from '@mantine/notifications';
@@ -309,7 +305,6 @@ export default function Dashboard() {
 
   // Metas calculations
   const metasAtivas = metas.filter((m) => !m.concluida);
-  const totalGuardado = metas.reduce((s, m) => s + Number(m.valor_atual), 0);
 
   // Investimentos calculations
   const totalInvestido = investimentos.reduce((s, i) => s + Number(i.valor_investido), 0);
