@@ -107,7 +107,7 @@ export default function Orcamento() {
       <Group justify="space-between" mb="lg">
         <div><Title order={2} fw={700}>Orçamento Mensal</Title><Text c="dimmed" size="sm">Defina limites de gastos por categoria</Text></div>
         <Group>
-          <MonthPickerInput value={mesSelecionado} onChange={setMesSelecionado} maxDate={dayjs().add(1, 'year').toDate()} placeholder="Selecionar mês" w={160} />
+          <MonthPickerInput value={mesSelecionado} onChange={(val) => setMesSelecionado(val as Date | null)} maxDate={dayjs().add(1, 'year').toDate()} placeholder="Selecionar mês" w={160} />
           <Button leftSection={<IconPlus size={16} />} onClick={open} style={{ background: 'linear-gradient(135deg, var(--mantine-color-orange-6), var(--mantine-color-red-6))' }}>Novo Limite</Button>
         </Group>
       </Group>
