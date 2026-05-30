@@ -15,6 +15,8 @@ router.get('/', async (req: Request, res: Response) => {
     if (error) { res.status(400).json({ error: error.message }); return; }
 
     // Para cada conta, calcular saldo real = saldo_inicial + receitas - despesas
+    // As transações de transferência já estão na tabela transacoes com conta_id correto,
+    // então NÃO somamos a tabela transferencias separadamente (evita double-counting)
     const contasComSaldo = await Promise.all((contas || []).map(async (conta) => {
       const { data: transacoes } = await supabase
         .from('transacoes')
@@ -29,22 +31,7 @@ router.get('/', async (req: Request, res: Response) => {
         .filter(t => t.tipo === 'despesa')
         .reduce((s, t) => s + Number(t.valor), 0);
 
-      // Transferências recebidas e enviadas
-      const { data: recebidas } = await supabase
-        .from('transferencias')
-        .select('valor')
-        .eq('user_id', req.userId!)
-        .eq('conta_destino_id', conta.id);
-      const { data: enviadas } = await supabase
-        .from('transferencias')
-        .select('valor')
-        .eq('user_id', req.userId!)
-        .eq('conta_origem_id', conta.id);
-
-      const totalRecebido = (recebidas || []).reduce((s, t) => s + Number(t.valor), 0);
-      const totalEnviado = (enviadas || []).reduce((s, t) => s + Number(t.valor), 0);
-
-      const saldoAtual = Number(conta.saldo_inicial) + receitas - despesas + totalRecebido - totalEnviado;
+      const saldoAtual = Number(conta.saldo_inicial) + receitas - despesas;
 
       return { ...conta, saldoAtual };
     }));
