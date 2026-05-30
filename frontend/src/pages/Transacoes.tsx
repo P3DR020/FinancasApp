@@ -15,7 +15,11 @@ import { useAuth } from '../contexts/AuthContext';
 
 interface Transacao {
   id: string; tipo: 'receita' | 'despesa'; valor: number;
-  descricao: string; categoria: string; data: string; tags: string[];
+  descricao: string; categoria: string; data: string; tags: string[]; conta_id?: string | null;
+}
+
+interface Conta {
+  id: string; nome: string; icone: string;
 }
 
 const categorias = ['Salário','Freelance','Investimentos','Alimentação','Transporte','Saúde','Educação','Lazer','Moradia','Outros'];
@@ -24,6 +28,7 @@ export default function Transacoes() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [transacoes, setTransacoes] = useState<Transacao[]>([]);
+  const [contas, setContas] = useState<Conta[]>([]);
   const [opened, { open, close }] = useDisclosure(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -36,6 +41,7 @@ export default function Transacoes() {
     initialValues: {
       tipo: 'despesa' as 'receita' | 'despesa', valor: '' as number | '',
       descricao: '', categoria: '', data: new Date(), tags: [] as string[],
+      conta_id: null as string | null,
     },
     validate: {
       valor: (v) => (!v || Number(v) <= 0 ? 'Valor deve ser maior que zero' : null),
@@ -55,8 +61,12 @@ export default function Transacoes() {
       if (categoriaFiltro) params.categoria = categoriaFiltro;
       if (tagFiltro) params.tag = tagFiltro;
 
-      const { data } = await api.get('/api/transacoes', { params });
-      setTransacoes(data || []);
+      const [transRes, contasRes] = await Promise.all([
+        api.get('/api/transacoes', { params }),
+        api.get('/api/contas'),
+      ]);
+      setTransacoes(transRes.data || []);
+      setContas(contasRes.data || []);
     } catch (err: any) {
       notifications.show({ title: 'Erro ao carregar transações', message: err.response?.data?.error || err.message, color: 'red' });
     }
@@ -66,17 +76,17 @@ export default function Transacoes() {
 
   useEffect(() => { fetchTransacoes(); }, [fetchTransacoes]);
 
-  const handleOpenNew = () => { setEditingId(null); form.reset(); form.setFieldValue('data', new Date()); open(); };
+  const handleOpenNew = () => { setEditingId(null); form.reset(); form.setFieldValue('data', new Date()); form.setFieldValue('conta_id', null); open(); };
 
   const handleOpenEdit = (t: Transacao) => {
     setEditingId(t.id);
-    form.setValues({ tipo: t.tipo, valor: Number(t.valor), descricao: t.descricao, categoria: t.categoria, data: new Date(t.data + 'T12:00:00'), tags: t.tags || [] });
+    form.setValues({ tipo: t.tipo, valor: Number(t.valor), descricao: t.descricao, categoria: t.categoria, data: new Date(t.data + 'T12:00:00'), tags: t.tags || [], conta_id: t.conta_id ?? null });
     open();
   };
 
   const handleSubmit = async (values: typeof form.values) => {
     if (!user) return;
-    const payload = { tipo: values.tipo, valor: Number(values.valor), descricao: values.descricao, categoria: values.categoria, data: dayjs(values.data).format('YYYY-MM-DD'), tags: values.tags || [] };
+    const payload = { tipo: values.tipo, valor: Number(values.valor), descricao: values.descricao, categoria: values.categoria, data: dayjs(values.data).format('YYYY-MM-DD'), tags: values.tags || [], conta_id: values.conta_id || null };
 
     try {
       if (editingId) {
@@ -188,6 +198,16 @@ export default function Transacoes() {
             <Select id="modal-categoria" label="Categoria" placeholder="Selecione uma categoria" data={categorias} size="md" {...form.getInputProps('categoria')} />
             <DateInput id="modal-data" label="Data" placeholder="Selecione a data" size="md" valueFormat="DD/MM/YYYY" {...form.getInputProps('data')} />
             <TagsInput label="Tags / Etiquetas" placeholder="Digite e pressione Enter" size="md" clearable {...form.getInputProps('tags')} />
+            {contas.length > 0 && (
+              <Select
+                label="Conta"
+                placeholder="Sem conta vinculada (opcional)"
+                data={contas.map(c => ({ value: c.id, label: `${c.icone} ${c.nome}` }))}
+                clearable
+                size="md"
+                {...form.getInputProps('conta_id')}
+              />
+            )}
             <Group justify="flex-end" mt="sm">
               <Button variant="default" onClick={close}>Cancelar</Button>
               <Button type="submit" style={{ background: 'linear-gradient(135deg, var(--mantine-color-teal-6), var(--mantine-color-teal-8))' }}>

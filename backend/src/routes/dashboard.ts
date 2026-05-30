@@ -20,13 +20,14 @@ router.get('/', async (req: Request, res: Response) => {
     const fimMes = `${year}-${month}-${lastDay}`;
 
     // Buscar tudo em paralelo
-    const [transacoesMesRes, todasTransacoesRes, ultimasRes, fixosRes, metasRes, investimentosRes] = await Promise.all([
+    const [transacoesMesRes, todasTransacoesRes, ultimasRes, fixosRes, metasRes, investimentosRes, contasRes] = await Promise.all([
       supabase.from('transacoes').select('*').eq('user_id', userId).gte('data', inicioMes).lte('data', fimMes).order('data', { ascending: false }),
       supabase.from('transacoes').select('tipo, valor').eq('user_id', userId),
       supabase.from('transacoes').select('*').eq('user_id', userId).order('data', { ascending: false }).limit(5),
       supabase.from('fixos').select('id, nome, tipo, valor, categoria, ativo').eq('user_id', userId),
       supabase.from('metas').select('id, nome, valor_alvo, valor_atual, concluida, data_limite').eq('user_id', userId).order('concluida', { ascending: true }).limit(5),
       supabase.from('investimentos').select('id, nome, tipo, valor_investido, valor_atual').eq('user_id', userId),
+      supabase.from('contas').select('id, nome, banco, tipo, saldo_inicial, cor, icone, ativa').eq('user_id', userId).eq('ativa', true).order('created_at', { ascending: true }),
     ]);
 
     const transacoesMes = transacoesMesRes.data || [];
@@ -69,6 +70,7 @@ router.get('/', async (req: Request, res: Response) => {
       fixos: fixosRes.data || [],
       metas: metasRes.data || [],
       investimentos: investimentosRes.data || [],
+      contas: contasRes.data || [],
       fixosGerados: fixosResult,
     });
   } catch (err) {

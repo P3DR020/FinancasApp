@@ -26,12 +26,14 @@ import {
   IconUser,
   IconWallet,
   IconChevronRight,
+  IconBuildingBank,
 } from '@tabler/icons-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const navItems = [
   { label: 'Dashboard', icon: IconLayoutDashboard, path: '/dashboard' },
   { label: 'Transações', icon: IconArrowsExchange, path: '/transacoes' },
+  { label: 'Contas', icon: IconBuildingBank, path: '/contas' },
   { label: 'Investimentos', icon: IconChartLine, path: '/investimentos' },
   { label: 'Fixos', icon: IconRepeat, path: '/fixos' },
   { label: 'Metas', icon: IconTargetArrow, path: '/metas' },

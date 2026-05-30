@@ -13,6 +13,7 @@ import cartoesRouter from './routes/cartoes';
 import orcamentosRouter from './routes/orcamentos';
 import parcelamentosRouter from './routes/parcelamentos';
 import dashboardRouter from './routes/dashboard';
+import contasRouter from './routes/contas';
 
 dotenv.config();
 
@@ -53,6 +54,7 @@ app.use('/api/cartoes', authMiddleware, cartoesRouter);
 app.use('/api/orcamentos', authMiddleware, orcamentosRouter);
 app.use('/api/parcelamentos', authMiddleware, parcelamentosRouter);
 app.use('/api/dashboard', authMiddleware, dashboardRouter);
+app.use('/api/contas', authMiddleware, contasRouter);
 
 // Start
 app.listen(PORT, () => {

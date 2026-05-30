@@ -146,7 +146,7 @@ router.get('/historico', async (req: Request, res: Response) => {
 // POST /api/transacoes — Criar transação
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { tipo, valor, descricao, categoria, data, tags } = req.body;
+    const { tipo, valor, descricao, categoria, data, tags, conta_id } = req.body;
 
     if (!tipo || !valor || !descricao || !categoria || !data) {
       res.status(400).json({ error: 'Campos obrigatórios: tipo, valor, descricao, categoria, data' });
@@ -161,6 +161,7 @@ router.post('/', async (req: Request, res: Response) => {
       categoria,
       data,
       tags: tags || [],
+      conta_id: conta_id || null,
     }).select().single();
 
     if (error) {
@@ -177,7 +178,7 @@ router.post('/', async (req: Request, res: Response) => {
 // PUT /api/transacoes/:id — Editar transação
 router.put('/:id', async (req: Request, res: Response) => {
   try {
-    const { tipo, valor, descricao, categoria, data, tags } = req.body;
+    const { tipo, valor, descricao, categoria, data, tags, conta_id } = req.body;
 
     const { data: result, error } = await supabase
       .from('transacoes')
@@ -189,6 +190,7 @@ router.put('/:id', async (req: Request, res: Response) => {
         categoria,
         data,
         tags: tags || [],
+        conta_id: conta_id || null,
       })
       .eq('id', req.params.id)
       .eq('user_id', req.userId!)

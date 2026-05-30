@@ -14,6 +14,7 @@ import Cartoes from './pages/Cartoes';
 import Orcamento from './pages/Orcamento';
 import Parcelamentos from './pages/Parcelamentos';
 import Perfil from './pages/Perfil';
+import Contas from './pages/Contas';
 
 export default function App() {
   return (
@@ -40,6 +41,7 @@ export default function App() {
           <Route path="/cartoes" element={<Cartoes />} />
           <Route path="/orcamento" element={<Orcamento />} />
           <Route path="/parcelamentos" element={<Parcelamentos />} />
+          <Route path="/contas" element={<Contas />} />
           <Route path="/perfil" element={<Perfil />} />
         </Route>
 
