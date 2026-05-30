@@ -58,16 +58,20 @@ interface FaturaData {
 }
 
 const bandeiras = [
-  { value: 'Mastercard', label: '🔴 Mastercard' },
-  { value: 'Visa', label: '🔵 Visa' },
-  { value: 'Elo', label: '🟡 Elo' },
-  { value: 'American Express', label: '🟢 American Express' },
-  { value: 'Outra', label: '⚪ Outra' },
+  { value: 'mastercard', label: '🔴 Mastercard' },
+  { value: 'visa', label: '🔵 Visa' },
+  { value: 'elo', label: '🟡 Elo' },
+  { value: 'amex', label: '🟢 American Express' },
+  { value: 'outro', label: '⚪ Outro' },
 ];
 
 const bandeiraBadgeColors: Record<string, string> = {
-  Mastercard: 'red', Visa: 'blue', Elo: 'yellow',
-  'American Express': 'green', Outra: 'gray',
+  mastercard: 'red', visa: 'blue', elo: 'yellow',
+  amex: 'green', outro: 'gray',
+};
+
+const bandeiraLabels: Record<string, string> = {
+  mastercard: 'Mastercard', visa: 'Visa', elo: 'Elo', amex: 'American Express', outro: 'Outro'
 };
 
 export default function Cartoes() {
@@ -261,7 +265,7 @@ export default function Cartoes() {
                 </Group>
                 <Group gap={6}>
                   <Badge variant="light" color={bandeiraBadgeColors[cartao.bandeira] || 'gray'} size="sm">
-                    {cartao.bandeira}
+                    {bandeiraLabels[cartao.bandeira] || cartao.bandeira}
                   </Badge>
                 </Group>
               </Group>
