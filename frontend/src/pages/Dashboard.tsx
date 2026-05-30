@@ -28,7 +28,7 @@ import {
 } from '@tabler/icons-react';
 import dayjs from 'dayjs';
 import { notifications } from '@mantine/notifications';
-import { supabase } from '../lib/supabase';
+import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 
 interface Transacao {
@@ -115,179 +115,48 @@ export default function Dashboard() {
     if (user) fetchData();
   }, [user]);
 
-  // Gera transações automáticas a partir dos fixos ativos
-  const gerarTransacoesFixas = async () => {
-    if (!user || autoGenRan.current) return;
-    autoGenRan.current = true;
-
-    const inicioMes = dayjs().startOf('month').format('YYYY-MM-DD');
-    const fimMes = dayjs().endOf('month').format('YYYY-MM-DD');
-
-    // Buscar fixos ativos
-    const { data: fixosAtivos } = await supabase
-      .from('fixos')
-      .select('id, nome, tipo, valor, categoria, dia_vencimento')
-      .eq('ativo', true);
-
-    if (!fixosAtivos || fixosAtivos.length === 0) return;
-
-    // Buscar transações já geradas de fixos neste mês
-    const { data: jaGeradas } = await supabase
-      .from('transacoes')
-      .select('fixo_id')
-      .not('fixo_id', 'is', null)
-      .gte('data', inicioMes)
-      .lte('data', fimMes);
-
-    const idsJaGerados = new Set((jaGeradas || []).map((t) => t.fixo_id));
-
-    // Filtrar os que ainda não foram gerados
-    const pendentes = fixosAtivos.filter((f) => !idsJaGerados.has(f.id));
-
-    if (pendentes.length === 0) return;
-
-    // Criar transações
-    const novasTransacoes = pendentes.map((f) => {
-      const dia = f.dia_vencimento || dayjs().date();
-      const dataTransacao = dayjs().startOf('month').date(Math.min(dia, dayjs().daysInMonth())).format('YYYY-MM-DD');
-      return {
-        user_id: user.id,
-        tipo: f.tipo,
-        valor: Number(f.valor),
-        descricao: `${f.nome} (fixo)`,
-        categoria: f.categoria,
-        data: dataTransacao,
-        fixo_id: f.id,
-      };
-    });
-
-    const { error } = await supabase.from('transacoes').insert(novasTransacoes);
-
-    if (!error) {
-      const qtdReceitas = pendentes.filter((f) => f.tipo === 'receita').length;
-      const qtdDespesas = pendentes.filter((f) => f.tipo === 'despesa').length;
-      const partes = [];
-      if (qtdReceitas > 0) partes.push(`${qtdReceitas} receita(s)`);
-      if (qtdDespesas > 0) partes.push(`${qtdDespesas} despesa(s)`);
-
-      notifications.show({
-        title: '🔄 Transações fixas geradas!',
-        message: `${partes.join(' e ')} geradas automaticamente para ${dayjs().format('MMMM/YYYY')}.`,
-        color: 'teal',
-        autoClose: 6000,
-      });
-    }
-  };
-
   const fetchData = async () => {
     setLoading(true);
 
-    // Gerar transações fixas antes de carregar dados
-    await gerarTransacoesFixas();
+    try {
+      const { data } = await api.get('/api/dashboard');
 
-    const inicioMes = dayjs().startOf('month').format('YYYY-MM-DD');
-    const fimMes = dayjs().endOf('month').format('YYYY-MM-DD');
+      setReceitasMes(data.receitasMes);
+      setDespesasMes(data.despesasMes);
+      setEconomiaMes(data.economiaMes);
+      setSaldoTotal(data.saldoTotal);
+      setUltimasTransacoes(data.ultimasTransacoes);
+      setFixos(data.fixos);
+      setMetas(data.metas);
+      setInvestimentos(data.investimentos);
+      setBarData(data.historico);
 
-    const { data: transacoesMes } = await supabase
-      .from('transacoes')
-      .select('*')
-      .gte('data', inicioMes)
-      .lte('data', fimMes)
-      .order('data', { ascending: false });
+      // Donut chart data
+      setDonutData(
+        Object.entries(data.despesasPorCategoria as Record<string, number>).map(([name, value]) => ({
+          name,
+          value,
+          color: categoryColors[name] || 'gray.6',
+        }))
+      );
 
-    const receitas = (transacoesMes || [])
-      .filter((t) => t.tipo === 'receita')
-      .reduce((sum, t) => sum + Number(t.valor), 0);
+      // Notificação de fixos gerados
+      if (!autoGenRan.current && data.fixosGerados && data.fixosGerados.geradas > 0) {
+        autoGenRan.current = true;
+        const partes = [];
+        if (data.fixosGerados.receitas > 0) partes.push(`${data.fixosGerados.receitas} receita(s)`);
+        if (data.fixosGerados.despesas > 0) partes.push(`${data.fixosGerados.despesas} despesa(s)`);
 
-    const despesas = (transacoesMes || [])
-      .filter((t) => t.tipo === 'despesa')
-      .reduce((sum, t) => sum + Number(t.valor), 0);
-
-    setReceitasMes(receitas);
-    setDespesasMes(despesas);
-    setEconomiaMes(receitas - despesas);
-
-    const { data: todasTransacoes } = await supabase
-      .from('transacoes')
-      .select('tipo, valor');
-
-    const totalReceitas = (todasTransacoes || [])
-      .filter((t) => t.tipo === 'receita')
-      .reduce((sum, t) => sum + Number(t.valor), 0);
-
-    const totalDespesas = (todasTransacoes || [])
-      .filter((t) => t.tipo === 'despesa')
-      .reduce((sum, t) => sum + Number(t.valor), 0);
-
-    setSaldoTotal(totalReceitas - totalDespesas);
-
-    const { data: ultimas } = await supabase
-      .from('transacoes')
-      .select('*')
-      .order('data', { ascending: false })
-      .limit(5);
-
-    setUltimasTransacoes(ultimas || []);
-
-    const despesasPorCategoria: Record<string, number> = {};
-    (transacoesMes || [])
-      .filter((t) => t.tipo === 'despesa')
-      .forEach((t) => {
-        despesasPorCategoria[t.categoria] =
-          (despesasPorCategoria[t.categoria] || 0) + Number(t.valor);
-      });
-
-    setDonutData(
-      Object.entries(despesasPorCategoria).map(([name, value]) => ({
-        name,
-        value,
-        color: categoryColors[name] || 'gray.6',
-      }))
-    );
-
-    const meses: ResumoMensal[] = [];
-    for (let i = 5; i >= 0; i--) {
-      const mesRef = dayjs().subtract(i, 'month');
-      const inicio = mesRef.startOf('month').format('YYYY-MM-DD');
-      const fim = mesRef.endOf('month').format('YYYY-MM-DD');
-
-      const { data: mesData } = await supabase
-        .from('transacoes')
-        .select('tipo, valor')
-        .gte('data', inicio)
-        .lte('data', fim);
-
-      const r = (mesData || [])
-        .filter((t) => t.tipo === 'receita')
-        .reduce((sum, t) => sum + Number(t.valor), 0);
-
-      const d = (mesData || [])
-        .filter((t) => t.tipo === 'despesa')
-        .reduce((sum, t) => sum + Number(t.valor), 0);
-
-      meses.push({ mes: mesRef.format('MMM/YY'), Receitas: r, Despesas: d });
+        notifications.show({
+          title: '🔄 Transações fixas geradas!',
+          message: `${partes.join(' e ')} geradas automaticamente para ${dayjs().format('MMMM/YYYY')}.`,
+          color: 'teal',
+          autoClose: 6000,
+        });
+      }
+    } catch (err) {
+      console.error('Erro ao carregar dashboard:', err);
     }
-    setBarData(meses);
-
-    // Fetch fixos
-    const { data: fixosData } = await supabase
-      .from('fixos')
-      .select('id, nome, tipo, valor, categoria, ativo');
-    setFixos(fixosData || []);
-
-    // Fetch metas
-    const { data: metasData } = await supabase
-      .from('metas')
-      .select('id, nome, valor_alvo, valor_atual, concluida, data_limite')
-      .order('concluida', { ascending: true })
-      .limit(5);
-    setMetas(metasData || []);
-
-    // Fetch investimentos
-    const { data: invData } = await supabase
-      .from('investimentos')
-      .select('id, nome, tipo, valor_investido, valor_atual');
-    setInvestimentos(invData || []);
 
     setLoading(false);
   };

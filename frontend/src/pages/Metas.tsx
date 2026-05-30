@@ -1,695 +1,226 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
-  Box,
-  Button,
-  Card,
-  Group,
-  Paper,
-  SimpleGrid,
-  Text,
-  Title,
-  Badge,
-  Progress,
-  ActionIcon,
-  Modal,
-  Stack,
-  TextInput,
-  NumberInput,
-  Select,
-  LoadingOverlay,
-  ThemeIcon,
-  Tooltip,
+  Box, Button, Group, Paper, SimpleGrid, Text, Title, Badge, ActionIcon,
+  Modal, Stack, TextInput, NumberInput, Progress, LoadingOverlay, ThemeIcon,
+  Tooltip, RingProgress, Center,
 } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import {
-  IconPlus,
-  IconTrash,
-  IconTargetArrow,
-  IconCoin,
-  IconTrophy,
-  IconCoinOff,
-  IconBuildingBank,
+  IconPlus, IconTrash, IconTargetArrow, IconCoin, IconTrophy,
+  IconCalendarEvent, IconMapPin, IconTrendingUp,
 } from '@tabler/icons-react';
 import dayjs from 'dayjs';
-import { supabase } from '../lib/supabase';
+import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
+import confetti from 'canvas-confetti';
 
 interface Meta {
-  id: string;
-  nome: string;
-  valor_alvo: number;
-  valor_atual: number;
-  local_guardado: string | null;
-  data_limite: string | null;
-  concluida: boolean;
+  id: string; nome: string; valor_alvo: number; valor_atual: number;
+  local_guardado: string | null; data_limite: string | null; concluida: boolean; criado_em: string;
 }
-
-const locaisGuardado = [
-  'Cofrinho',
-  'Nubank',
-  'Mercado Pago',
-  'Santander',
-  'Itaú',
-  'Bradesco',
-  'Banco do Brasil',
-  'Caixa',
-  'Inter',
-  'C6 Bank',
-  'PicPay',
-  'PagBank',
-  'Carteira',
-  'Poupança',
-  'Investimento',
-  'Outro',
-];
 
 export default function Metas() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [metas, setMetas] = useState<Meta[]>([]);
-  const [newOpened, { open: openNew, close: closeNew }] = useDisclosure(false);
-  const [addOpened, { open: openAdd, close: closeAdd }] = useDisclosure(false);
+  const [openedNew, { open: openNew, close: closeNew }] = useDisclosure(false);
+  const [openedDeposit, { open: openDeposit, close: closeDeposit }] = useDisclosure(false);
   const [selectedMeta, setSelectedMeta] = useState<Meta | null>(null);
-  const [addValue, setAddValue] = useState<number | ''>('');
 
-  const form = useForm({
-    initialValues: {
-      nome: '',
-      valor_alvo: '' as number | '',
-      valor_atual: '' as number | '',
-      local_guardado: '' as string,
-      data_limite: null as Date | null,
-    },
+  const formNew = useForm({
+    initialValues: { nome: '', valor_alvo: '' as number | '', valor_atual: '' as number | '', local_guardado: '', data_limite: null as Date | null },
     validate: {
-      nome: (v) => (!v.trim() ? 'Nome da meta é obrigatório' : null),
-      valor_alvo: (v) => (!v || Number(v) <= 0 ? 'Valor deve ser maior que zero' : null),
+      nome: (v) => (!v.trim() ? 'Nome é obrigatório' : null),
+      valor_alvo: (v) => (!v || Number(v) <= 0 ? 'Valor alvo deve ser maior que zero' : null),
     },
   });
 
-  const fetchMetas = async () => {
+  const formDeposit = useForm({
+    initialValues: { valor: '' as number | '' },
+    validate: { valor: (v) => (!v || Number(v) <= 0 ? 'Valor deve ser maior que zero' : null) },
+  });
+
+  const fetchMetas = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-
-    const { data, error } = await supabase
-      .from('metas')
-      .select('*')
-      .order('criado_em', { ascending: false });
-
-    if (error) {
-      notifications.show({
-        title: 'Erro ao carregar metas',
-        message: error.message,
-        color: 'red',
-      });
-    } else {
+    try {
+      const { data } = await api.get('/api/metas');
       setMetas(data || []);
+    } catch (err: any) {
+      notifications.show({ title: 'Erro ao carregar', message: err.response?.data?.error || err.message, color: 'red' });
     }
-
     setLoading(false);
-  };
-
-  useEffect(() => {
-    if (user) fetchMetas();
   }, [user]);
 
-  const handleCreateMeta = async (values: typeof form.values) => {
+  useEffect(() => { if (user) fetchMetas(); }, [user, fetchMetas]);
+
+  const handleSubmitNew = async (values: typeof formNew.values) => {
     if (!user) return;
-
-    const valorAtual = Number(values.valor_atual) || 0;
-    const valorAlvo = Number(values.valor_alvo);
-
-    const { error } = await supabase.from('metas').insert({
-      user_id: user.id,
-      nome: values.nome,
-      valor_alvo: valorAlvo,
-      valor_atual: valorAtual,
-      local_guardado: values.local_guardado || null,
-      data_limite: values.data_limite
-        ? dayjs(values.data_limite).format('YYYY-MM-DD')
-        : null,
-      concluida: valorAtual >= valorAlvo,
-    });
-
-    if (error) {
-      notifications.show({
-        title: 'Erro ao criar meta',
-        message: error.message,
-        color: 'red',
-      });
-      return;
+    const payload = { nome: values.nome, valor_alvo: Number(values.valor_alvo), valor_atual: Number(values.valor_atual) || 0, local_guardado: values.local_guardado || null, data_limite: values.data_limite ? dayjs(values.data_limite).format('YYYY-MM-DD') : null };
+    try {
+      await api.post('/api/metas', payload);
+      notifications.show({ title: 'Meta criada!', message: `Meta "${values.nome}" registrada.`, color: 'teal' });
+      closeNew(); formNew.reset(); fetchMetas();
+    } catch (err: any) {
+      notifications.show({ title: 'Erro', message: err.response?.data?.error || err.message, color: 'red' });
     }
-
-    notifications.show({
-      title: 'Meta criada!',
-      message: `"${values.nome}" adicionada com sucesso.`,
-      color: 'teal',
-    });
-
-    closeNew();
-    form.reset();
-    fetchMetas();
   };
 
-  const handleAddValue = async () => {
-    if (!selectedMeta || !addValue || Number(addValue) <= 0) return;
+  const handleOpenDeposit = (meta: Meta) => { setSelectedMeta(meta); formDeposit.reset(); openDeposit(); };
 
-    const novoValor = Number(selectedMeta.valor_atual) + Number(addValue);
-    const concluida = novoValor >= Number(selectedMeta.valor_alvo);
-
-    const { error } = await supabase
-      .from('metas')
-      .update({
-        valor_atual: novoValor,
-        concluida,
-      })
-      .eq('id', selectedMeta.id);
-
-    if (error) {
-      notifications.show({
-        title: 'Erro ao atualizar meta',
-        message: error.message,
-        color: 'red',
-      });
-      return;
+  const handleSubmitDeposit = async (values: typeof formDeposit.values) => {
+    if (!selectedMeta) return;
+    try {
+      const { data } = await api.patch(`/api/metas/${selectedMeta.id}/depositar`, { valor: Number(values.valor) });
+      notifications.show({ title: 'Depósito realizado!', message: `Você adicionou dinheiro à meta "${selectedMeta.nome}".`, color: 'teal' });
+      if (data.recemConcluida) triggerConfetti();
+      closeDeposit(); fetchMetas();
+    } catch (err: any) {
+      notifications.show({ title: 'Erro', message: err.response?.data?.error || err.message, color: 'red' });
     }
-
-    if (concluida) {
-      notifications.show({
-        title: '🎉 Meta concluída!',
-        message: `Parabéns! Você atingiu a meta "${selectedMeta.nome}"!`,
-        color: 'teal',
-      });
-    } else {
-      notifications.show({
-        title: 'Valor adicionado',
-        message: `R$ ${Number(addValue).toFixed(2)} adicionado à meta "${selectedMeta.nome}".`,
-        color: 'teal',
-      });
-    }
-
-    closeAdd();
-    setAddValue('');
-    setSelectedMeta(null);
-    fetchMetas();
   };
 
   const handleDelete = async (id: string) => {
-    const { error } = await supabase.from('metas').delete().eq('id', id);
-
-    if (error) {
-      notifications.show({
-        title: 'Erro ao excluir',
-        message: error.message,
-        color: 'red',
-      });
-      return;
+    try {
+      await api.delete(`/api/metas/${id}`);
+      notifications.show({ title: 'Excluído', message: 'Meta removida.', color: 'teal' });
+      fetchMetas();
+    } catch (err: any) {
+      notifications.show({ title: 'Erro', message: err.response?.data?.error || err.message, color: 'red' });
     }
-
-    notifications.show({
-      title: 'Meta excluída',
-      message: 'Meta removida com sucesso.',
-      color: 'teal',
-    });
-
-    fetchMetas();
   };
 
-  const openAddModal = (meta: Meta) => {
-    setSelectedMeta(meta);
-    setAddValue('');
-    openAdd();
+  const triggerConfetti = () => {
+    const duration = 3000; const end = Date.now() + duration;
+    (function frame() {
+      confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#20c997', '#fab005', '#228be6'] });
+      confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#20c997', '#fab005', '#228be6'] });
+      if (Date.now() < end) requestAnimationFrame(frame);
+    }());
   };
 
-  const formatCurrency = (value: number) => {
-    return value.toLocaleString('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    });
-  };
+  const formatCurrency = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-  // Summary calculations
-  const metasAtivas = metas.filter((m) => !m.concluida).length;
-  const totalAlvo = metas
-    .filter((m) => !m.concluida)
-    .reduce((sum, m) => sum + Number(m.valor_alvo), 0);
-  const totalGuardado = metas.reduce((sum, m) => sum + Number(m.valor_atual), 0);
-
-  const summaryCards = [
-    {
-      title: 'Metas ativas',
-      value: metasAtivas.toString(),
-      icon: IconTargetArrow,
-      color: 'blue',
-      cssClass: 'stat-blue',
-    },
-    {
-      title: 'Total a poupar',
-      value: formatCurrency(totalAlvo),
-      icon: IconCoinOff,
-      color: 'yellow',
-      cssClass: 'stat-yellow',
-    },
-    {
-      title: 'Já guardado',
-      value: formatCurrency(totalGuardado),
-      icon: IconCoin,
-      color: 'teal',
-      cssClass: 'stat-teal',
-    },
-  ];
+  const totalAlvo = metas.reduce((sum, m) => sum + Number(m.valor_alvo), 0);
+  const totalAtual = metas.reduce((sum, m) => sum + Number(m.valor_atual), 0);
+  const progressGeral = totalAlvo > 0 ? (totalAtual / totalAlvo) * 100 : 0;
+  const concluidas = metas.filter(m => m.concluida).length;
 
   return (
     <Box pos="relative" mih="60vh">
-      <LoadingOverlay
-        visible={loading}
-        zIndex={100}
-        overlayProps={{ blur: 2 }}
-        loaderProps={{ color: 'teal', type: 'bars' }}
-      />
-
+      <LoadingOverlay visible={loading} zIndex={100} overlayProps={{ blur: 2 }} loaderProps={{ color: 'cyan', type: 'bars' }} />
       <Group justify="space-between" mb="lg">
-        <div>
-          <Title order={2} fw={700}>
-            Metas
-          </Title>
-          <Text c="dimmed" size="sm">
-            Acompanhe suas metas de economia
-          </Text>
-        </div>
-        <Button
-          id="btn-nova-meta"
-          leftSection={<IconPlus size={16} />}
-          onClick={openNew}
-          style={{
-            background: 'linear-gradient(135deg, var(--mantine-color-teal-6), var(--mantine-color-teal-8))',
-          }}
-        >
-          Nova Meta
-        </Button>
+        <div><Title order={2} fw={700}>Metas Financeiras</Title><Text c="dimmed" size="sm">Defina objetivos e acompanhe seu progresso</Text></div>
+        <Button id="btn-nova-meta" leftSection={<IconPlus size={16} />} onClick={openNew} style={{ background: 'linear-gradient(135deg, var(--mantine-color-cyan-6), var(--mantine-color-blue-7))' }}>Nova meta</Button>
       </Group>
 
-      {/* Summary Cards */}
-      <SimpleGrid cols={{ base: 1, sm: 3 }} mb="xl">
-        {summaryCards.map((card, i) => (
-          <Paper
-            key={card.title}
-            withBorder
-            p="md"
-            radius="md"
-            className={`stat-card ${card.cssClass} card-hover animate-fade-in-up`}
-            style={{
-              animationDelay: `${i * 0.08}s`,
-              borderColor: 'var(--mantine-color-dark-4)',
-            }}
-          >
-            <Group justify="space-between" mb="xs">
-              <Text size="xs" c="dimmed" fw={500} tt="uppercase">
-                {card.title}
-              </Text>
-              <ThemeIcon variant="light" color={card.color} size="sm" radius="xl">
-                <card.icon size={14} />
-              </ThemeIcon>
-            </Group>
-            <Text size="xl" fw={700} c={card.color}>
-              {card.value}
-            </Text>
-          </Paper>
-        ))}
-      </SimpleGrid>
-
-      {/* Where is my money? */}
-      {(() => {
-        // Aggregate money by location
-        const porLocal: Record<string, number> = {};
-        metas.forEach((m) => {
-          if (m.local_guardado && Number(m.valor_atual) > 0) {
-            porLocal[m.local_guardado] =
-              (porLocal[m.local_guardado] || 0) + Number(m.valor_atual);
-          }
-        });
-        const locais = Object.entries(porLocal).sort((a, b) => b[1] - a[1]);
-
-        if (locais.length === 0) return null;
-
-        const localColors: Record<string, { color: string; emoji: string }> = {
-          'Nubank': { color: 'grape', emoji: '💜' },
-          'Santander': { color: 'red', emoji: '🔴' },
-          'Itaú': { color: 'orange', emoji: '🟠' },
-          'Bradesco': { color: 'red', emoji: '🏦' },
-          'Banco do Brasil': { color: 'yellow', emoji: '💛' },
-          'Caixa': { color: 'blue', emoji: '🔵' },
-          'Inter': { color: 'orange', emoji: '🧡' },
-          'C6 Bank': { color: 'dark', emoji: '⚫' },
-          'Mercado Pago': { color: 'blue', emoji: '🤝' },
-          'PicPay': { color: 'green', emoji: '💚' },
-          'PagBank': { color: 'yellow', emoji: '💰' },
-          'Cofrinho': { color: 'pink', emoji: '🐷' },
-          'Carteira': { color: 'brown', emoji: '👛' },
-          'Poupança': { color: 'teal', emoji: '🏦' },
-          'Investimento': { color: 'indigo', emoji: '📈' },
-        };
-
-        const getLocalStyle = (name: string) =>
-          localColors[name] || { color: 'gray', emoji: '🏦' };
-
-        return (
-          <Paper
-            withBorder
-            p="lg"
-            radius="md"
-            mb="xl"
-            className="animate-fade-in-up"
-            style={{
-              animationDelay: '0.3s',
-              borderColor: 'var(--mantine-color-dark-4)',
-            }}
-          >
-            <Group justify="space-between" mb="md">
-              <Group gap="xs">
-                <ThemeIcon variant="light" color="violet" size="md" radius="xl">
-                  <IconBuildingBank size={18} />
-                </ThemeIcon>
-                <Text fw={600} size="lg">
-                  Onde está meu dinheiro?
-                </Text>
+      {metas.length > 0 && (
+        <Paper withBorder p="xl" radius="md" mb="xl" className="animate-fade-in-up" style={{ borderColor: 'var(--mantine-color-dark-4)' }}>
+          <Group align="center" gap="xl" wrap="nowrap">
+            <RingProgress size={120} thickness={12} roundCaps sections={[{ value: progressGeral, color: progressGeral >= 100 ? 'teal' : 'cyan' }]} label={<Center><ThemeIcon color={progressGeral >= 100 ? 'teal' : 'cyan'} variant="light" radius="xl" size="xl"><IconTrophy size={22} /></ThemeIcon></Center>} />
+            <Box style={{ flex: 1 }}>
+              <Text size="sm" c="dimmed" tt="uppercase" fw={600} mb={4}>Progresso Global</Text>
+              <Group justify="space-between" align="flex-end" mb="xs">
+                <Text size="xl" fw={700}>{formatCurrency(totalAtual)} <Text span size="sm" c="dimmed" fw={500}>de {formatCurrency(totalAlvo)}</Text></Text>
+                <Badge color={progressGeral >= 100 ? 'teal' : 'cyan'} variant="light" size="lg">{Math.round(progressGeral)}%</Badge>
               </Group>
-              <Badge variant="light" color="teal" size="lg" style={{ padding: '8px 12px' }}>
-                Total: {formatCurrency(totalGuardado)}
-              </Badge>
-            </Group>
-
-            <SimpleGrid cols={{ base: 2, sm: 3, lg: 4 }}>
-              {locais.map(([local, valor], i) => {
-                const style = getLocalStyle(local);
-                const pct = totalGuardado > 0 ? Math.round((valor / totalGuardado) * 100) : 0;
-
-                return (
-                  <Paper
-                    key={local}
-                    withBorder
-                    p="md"
-                    radius="md"
-                    className="card-hover animate-fade-in-up"
-                    style={{
-                      animationDelay: `${0.35 + i * 0.05}s`,
-                      borderColor: `var(--mantine-color-${style.color}-7)`,
-                      borderWidth: 1,
-                      background: `var(--mantine-color-dark-7)`,
-                    }}
-                  >
-                    <Group gap="xs" mb={6}>
-                      <Text size="xl" lh={1}>{style.emoji}</Text>
-                      <Text size="sm" fw={600} lineClamp={1}>
-                        {local}
-                      </Text>
-                    </Group>
-                    <Text size="lg" fw={700} c={style.color}>
-                      {formatCurrency(valor)}
-                    </Text>
-                    <Text size="xs" c="dimmed">
-                      {pct}% do total
-                    </Text>
-                  </Paper>
-                );
-              })}
-            </SimpleGrid>
-          </Paper>
-        );
-      })()}
-
-      {/* Goals Grid */}
-      {metas.length > 0 ? (
-        <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
-          {metas.map((meta, i) => {
-            const progress = Math.min(
-              (Number(meta.valor_atual) / Number(meta.valor_alvo)) * 100,
-              100
-            );
-
-            return (
-              <Card
-                key={meta.id}
-                withBorder
-                radius="md"
-                p="lg"
-                className="card-hover animate-fade-in-up"
-                style={{
-                  animationDelay: `${(i + 3) * 0.06}s`,
-                  borderColor: meta.concluida
-                    ? 'var(--mantine-color-teal-7)'
-                    : 'var(--mantine-color-dark-4)',
-                }}
-              >
-                <Group justify="space-between" mb="xs">
-                  <Group gap="xs">
-                    {meta.concluida && (
-                      <ThemeIcon size="sm" color="teal" variant="light" radius="xl">
-                        <IconTrophy size={12} />
-                      </ThemeIcon>
-                    )}
-                    <Text fw={600} lineClamp={1}>
-                      {meta.nome}
-                    </Text>
-                  </Group>
-                  <Badge
-                    color={meta.concluida ? 'teal' : 'gray'}
-                    variant={meta.concluida ? 'filled' : 'light'}
-                    size="sm"
-                  >
-                    {meta.concluida ? 'Concluída' : 'Em andamento'}
-                  </Badge>
-                </Group>
-
-                <Progress
-                  value={progress}
-                  color={meta.concluida ? 'teal' : 'blue'}
-                  size="lg"
-                  radius="xl"
-                  mb="xs"
-                  animated={!meta.concluida}
-                  className={meta.concluida ? '' : 'progress-glow'}
-                />
-
-                <Group justify="space-between" mb="xs">
-                  <Text size="sm" c="dimmed">
-                    {formatCurrency(Number(meta.valor_atual))} de{' '}
-                    {formatCurrency(Number(meta.valor_alvo))}
-                  </Text>
-                  <Text size="sm" fw={500} c={meta.concluida ? 'teal' : 'blue'}>
-                    {Math.round(progress)}%
-                  </Text>
-                </Group>
-
-                {meta.local_guardado && (
-                  <Badge
-                    variant="light"
-                    color="violet"
-                    size="sm"
-                    mb="xs"
-                    leftSection={<IconBuildingBank size={12} />}
-                  >
-                    {meta.local_guardado}
-                  </Badge>
-                )}
-
-                {meta.data_limite && (
-                  <Text size="xs" c="dimmed" mb="xs">
-                    Prazo: {dayjs(meta.data_limite).format('DD/MM/YYYY')}
-                  </Text>
-                )}
-
-                <Group mt="md" gap="xs">
-                  {!meta.concluida && (
-                    <Button
-                      size="xs"
-                      variant="light"
-                      color="teal"
-                      onClick={() => openAddModal(meta)}
-                    >
-                      + Adicionar valor
-                    </Button>
-                  )}
-                  <Tooltip label="Excluir meta">
-                    <ActionIcon
-                      variant="subtle"
-                      color="red"
-                      size="sm"
-                      onClick={() => handleDelete(meta.id)}
-                    >
-                      <IconTrash size={16} />
-                    </ActionIcon>
-                  </Tooltip>
-                </Group>
-              </Card>
-            );
-          })}
-        </SimpleGrid>
-      ) : (
-        <Paper
-          withBorder
-          p="xl"
-          radius="md"
-          style={{ borderColor: 'var(--mantine-color-dark-4)' }}
-        >
-          <Stack align="center" py="lg">
-            <ThemeIcon size="xl" color="teal" variant="light" radius="xl">
-              <IconTargetArrow size={28} />
-            </ThemeIcon>
-            <Text c="dimmed" size="sm" ta="center">
-              Você ainda não criou nenhuma meta de economia.
-            </Text>
-            <Button variant="light" color="teal" onClick={openNew}>
-              Criar primeira meta
-            </Button>
-          </Stack>
+              <Progress value={progressGeral} color={progressGeral >= 100 ? 'teal' : 'cyan'} size="sm" radius="xl" striped={progressGeral < 100} animated={progressGeral < 100} />
+              <Group mt="md" gap="lg">
+                <Group gap={6}><IconTargetArrow size={16} color="var(--mantine-color-dimmed)" /><Text size="sm" c="dimmed">{metas.length} Metas</Text></Group>
+                <Group gap={6}><IconTrophy size={16} color="var(--mantine-color-dimmed)" /><Text size="sm" c="dimmed">{concluidas} Concluídas</Text></Group>
+              </Group>
+            </Box>
+          </Group>
         </Paper>
       )}
 
-      {/* Modal New Goal */}
-      <Modal
-        opened={newOpened}
-        onClose={closeNew}
-        title={
-          <Text fw={700} size="lg">
-            Nova Meta
-          </Text>
-        }
-        size="md"
-        radius="lg"
-        centered
-        overlayProps={{ blur: 3 }}
-      >
-        <form onSubmit={form.onSubmit(handleCreateMeta)}>
+      <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
+        {metas.map((meta, i) => {
+          const progress = Math.min((Number(meta.valor_atual) / Number(meta.valor_alvo)) * 100, 100);
+          const isLate = meta.data_limite && !meta.concluida && dayjs(meta.data_limite).isBefore(dayjs());
+          return (
+            <Paper key={meta.id} withBorder p="lg" radius="md" className="animate-fade-in-up" style={{ animationDelay: `${i * 0.08}s`, borderColor: meta.concluida ? 'var(--mantine-color-teal-7)' : 'var(--mantine-color-dark-4)', background: 'var(--mantine-color-dark-8)', position: 'relative', overflow: 'hidden' }}>
+              {meta.concluida && (<Box style={{ position: 'absolute', top: 12, right: -30, background: 'var(--mantine-color-teal-6)', color: 'white', padding: '4px 30px', transform: 'rotate(45deg)', fontSize: 10, fontWeight: 700, zIndex: 1 }}>CONCLUÍDA</Box>)}
+              <Group justify="space-between" mb="xs" pr={meta.concluida ? 30 : 0} wrap="nowrap">
+                <Group gap="xs" wrap="nowrap">
+                  <ThemeIcon variant="light" color={meta.concluida ? 'teal' : 'cyan'} size="lg" radius="md"><IconTargetArrow size={20} /></ThemeIcon>
+                  <Text fw={600} size="lg" lineClamp={1} title={meta.nome}>{meta.nome}</Text>
+                </Group>
+                <Tooltip label="Excluir meta"><ActionIcon variant="subtle" color="red" size="sm" onClick={() => handleDelete(meta.id)}><IconTrash size={16} /></ActionIcon></Tooltip>
+              </Group>
+
+              <Group justify="space-between" mb={4} mt="md">
+                <Text size="sm" c="dimmed">Acumulado</Text>
+                <Text size="sm" fw={700} c={meta.concluida ? 'teal' : undefined}>{formatCurrency(Number(meta.valor_atual))}</Text>
+              </Group>
+              <Progress value={progress} color={meta.concluida ? 'teal' : 'cyan'} size="lg" radius="xl" mb={4} striped={!meta.concluida} animated={!meta.concluida && meta.valor_atual > 0} />
+              <Group justify="space-between" mb="lg">
+                <Text size="xs" fw={600} c={meta.concluida ? 'teal' : 'cyan'}>{Math.round(progress)}%</Text>
+                <Text size="xs" c="dimmed">Alvo: {formatCurrency(Number(meta.valor_alvo))}</Text>
+              </Group>
+
+              {(meta.data_limite || meta.local_guardado) && (
+                <Stack gap="xs" mb="lg" p="sm" style={{ background: 'var(--mantine-color-dark-7)', borderRadius: 'var(--mantine-radius-md)' }}>
+                  {meta.local_guardado && (
+                    <Group gap="xs"><IconMapPin size={14} color="var(--mantine-color-dimmed)" /><Text size="xs" c="dimmed" lineClamp={1} style={{ flex: 1 }}>Guardado em: <Text span fw={500}>{meta.local_guardado}</Text></Text></Group>
+                  )}
+                  {meta.data_limite && (
+                    <Group gap="xs"><IconCalendarEvent size={14} color={isLate ? 'var(--mantine-color-red-6)' : 'var(--mantine-color-dimmed)'} /><Text size="xs" c={isLate ? 'red' : 'dimmed'}>Prazo: <Text span fw={500}>{dayjs(meta.data_limite).format('DD/MM/YYYY')}</Text></Text></Group>
+                  )}
+                </Stack>
+              )}
+
+              {!meta.concluida && (
+                <Button fullWidth variant="light" color="cyan" leftSection={<IconTrendingUp size={16} />} onClick={() => handleOpenDeposit(meta)} mt="auto">Guardar Dinheiro</Button>
+              )}
+            </Paper>
+          );
+        })}
+      </SimpleGrid>
+
+      {metas.length === 0 && !loading && (
+        <Stack align="center" py={60} className="animate-fade-in-up">
+          <ThemeIcon size={80} radius="100%" color="cyan" variant="light" mb="md"><IconTargetArrow size={40} /></ThemeIcon>
+          <Title order={3}>Nenhuma meta definida</Title>
+          <Text c="dimmed" ta="center" maw={400}>Comece a planejar seu futuro! Crie uma meta para uma viagem, reserva de emergência ou compra de um bem.</Text>
+          <Button mt="md" onClick={openNew} leftSection={<IconPlus size={16} />} style={{ background: 'linear-gradient(135deg, var(--mantine-color-cyan-6), var(--mantine-color-blue-7))' }}>Criar minha primeira meta</Button>
+        </Stack>
+      )}
+
+      {/* Modal Nova Meta */}
+      <Modal opened={openedNew} onClose={closeNew} title={<Text fw={700} size="lg">Criar Nova Meta</Text>} size="md" radius="lg" centered overlayProps={{ blur: 3 }}>
+        <form onSubmit={formNew.onSubmit(handleSubmitNew)}>
           <Stack gap="md">
-            <TextInput
-              id="meta-nome"
-              label="Nome da meta"
-              placeholder="Ex: Viagem para Europa"
-              size="md"
-              {...form.getInputProps('nome')}
-            />
-
-            <NumberInput
-              id="meta-valor-alvo"
-              label="Valor alvo"
-              placeholder="R$ 0,00"
-              prefix="R$ "
-              decimalSeparator=","
-              thousandSeparator="."
-              min={0.01}
-              decimalScale={2}
-              size="md"
-              {...form.getInputProps('valor_alvo')}
-            />
-
-            <NumberInput
-              id="meta-valor-atual"
-              label="Já tenho guardado"
-              placeholder="R$ 0,00"
-              prefix="R$ "
-              decimalSeparator=","
-              thousandSeparator="."
-              min={0}
-              decimalScale={2}
-              size="md"
-              {...form.getInputProps('valor_atual')}
-            />
-
-            <Select
-              id="meta-local-guardado"
-              label="Onde está guardado?"
-              placeholder="Ex: Nubank, Cofrinho..."
-              data={locaisGuardado}
-              searchable
-              clearable
-              size="md"
-              leftSection={<IconBuildingBank size={16} />}
-              {...form.getInputProps('local_guardado')}
-            />
-
-            <DateInput
-              id="meta-data-limite"
-              label="Data limite (opcional)"
-              placeholder="Selecione a data"
-              clearable
-              size="md"
-              valueFormat="DD/MM/YYYY"
-              {...form.getInputProps('data_limite')}
-            />
-
-            <Group justify="flex-end" mt="sm">
-              <Button variant="default" onClick={closeNew}>
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                style={{
-                  background: 'linear-gradient(135deg, var(--mantine-color-teal-6), var(--mantine-color-teal-8))',
-                }}
-              >
-                Criar meta
-              </Button>
-            </Group>
+            <TextInput label="Nome da Meta" placeholder="Ex: Viagem para o Japão, Reserva de Emergência..." size="md" leftSection={<IconTargetArrow size={16} />} {...formNew.getInputProps('nome')} />
+            <NumberInput label="Valor Alvo" placeholder="R$ 0,00" prefix="R$ " decimalSeparator="," thousandSeparator="." min={0.01} decimalScale={2} size="md" {...formNew.getInputProps('valor_alvo')} />
+            <NumberInput label="Valor Já Guardado (opcional)" description="Se você já tem algum valor guardado para esta meta" placeholder="R$ 0,00" prefix="R$ " decimalSeparator="," thousandSeparator="." min={0} decimalScale={2} size="md" {...formNew.getInputProps('valor_atual')} />
+            <TextInput label="Local (opcional)" description="Onde esse dinheiro está guardado?" placeholder="Ex: Caixinha do Nubank, Poupança, Tesouro Direto..." size="md" leftSection={<IconMapPin size={16} />} {...formNew.getInputProps('local_guardado')} />
+            <DateInput label="Data Limite (opcional)" placeholder="Quando você quer atingir?" size="md" valueFormat="DD/MM/YYYY" clearable leftSection={<IconCalendarEvent size={16} />} {...formNew.getInputProps('data_limite')} />
+            <Group justify="flex-end" mt="sm"><Button variant="default" onClick={closeNew}>Cancelar</Button><Button type="submit" style={{ background: 'linear-gradient(135deg, var(--mantine-color-cyan-6), var(--mantine-color-blue-7))' }}>Criar Meta</Button></Group>
           </Stack>
         </form>
       </Modal>
 
-      {/* Modal Add Value */}
-      <Modal
-        opened={addOpened}
-        onClose={closeAdd}
-        title={
-          <Text fw={700} size="lg">
-            Adicionar valor
-          </Text>
-        }
-        size="sm"
-        radius="lg"
-        centered
-        overlayProps={{ blur: 3 }}
-      >
+      {/* Modal Guardar Dinheiro */}
+      <Modal opened={openedDeposit} onClose={closeDeposit} title={<Text fw={700} size="lg">Guardar Dinheiro</Text>} size="sm" radius="lg" centered overlayProps={{ blur: 3 }}>
         {selectedMeta && (
-          <Stack gap="md">
-            <Text size="sm" c="dimmed">
-              Meta: <strong>{selectedMeta.nome}</strong>
-            </Text>
-            <Text size="sm" c="dimmed">
-              Atual: {formatCurrency(Number(selectedMeta.valor_atual))} de{' '}
-              {formatCurrency(Number(selectedMeta.valor_alvo))}
-            </Text>
-
-            <NumberInput
-              id="add-valor"
-              label="Quanto deseja adicionar?"
-              placeholder="R$ 0,00"
-              prefix="R$ "
-              decimalSeparator=","
-              thousandSeparator="."
-              min={0.01}
-              decimalScale={2}
-              size="md"
-              value={addValue}
-              onChange={(v) => setAddValue(v as number | '')}
-            />
-
-            <Group justify="flex-end" mt="sm">
-              <Button variant="default" onClick={closeAdd}>
-                Cancelar
-              </Button>
-              <Button
-                onClick={handleAddValue}
-                disabled={!addValue || Number(addValue) <= 0}
-                style={{
-                  background: 'linear-gradient(135deg, var(--mantine-color-teal-6), var(--mantine-color-teal-8))',
-                }}
-              >
-                Adicionar
-              </Button>
-            </Group>
-          </Stack>
+          <form onSubmit={formDeposit.onSubmit(handleSubmitDeposit)}>
+            <Stack gap="md">
+              <Paper withBorder p="md" radius="md" style={{ background: 'var(--mantine-color-dark-7)', borderColor: 'var(--mantine-color-dark-5)' }}>
+                <Text size="sm" c="dimmed" mb={4}>Meta selecionada:</Text>
+                <Text fw={600} size="md" lineClamp={1}>{selectedMeta.nome}</Text>
+                <Group justify="space-between" mt="sm">
+                  <Text size="xs" c="dimmed">Falta:</Text>
+                  <Text size="sm" fw={600} c="cyan">{formatCurrency(Number(selectedMeta.valor_alvo) - Number(selectedMeta.valor_atual))}</Text>
+                </Group>
+              </Paper>
+              <NumberInput label="Valor a depositar" placeholder="R$ 0,00" prefix="R$ " decimalSeparator="," thousandSeparator="." min={0.01} max={Number(selectedMeta.valor_alvo) - Number(selectedMeta.valor_atual)} decimalScale={2} size="md" leftSection={<IconCoin size={16} />} {...formDeposit.getInputProps('valor')} autoFocus />
+              <Button type="submit" fullWidth size="md" style={{ background: 'linear-gradient(135deg, var(--mantine-color-cyan-6), var(--mantine-color-teal-6))' }}>Confirmar Depósito</Button>
+            </Stack>
+          </form>
         )}
       </Modal>
     </Box>
