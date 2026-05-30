@@ -22,6 +22,10 @@ interface Conta {
   id: string; nome: string; icone: string;
 }
 
+interface Cartao {
+  id: string; nome: string; bandeira: string;
+}
+
 const categorias = ['Salário','Freelance','Investimentos','Alimentação','Transporte','Saúde','Educação','Lazer','Moradia','Outros'];
 
 export default function Transacoes() {
@@ -29,6 +33,7 @@ export default function Transacoes() {
   const [loading, setLoading] = useState(true);
   const [transacoes, setTransacoes] = useState<Transacao[]>([]);
   const [contas, setContas] = useState<Conta[]>([]);
+  const [cartoes, setCartoes] = useState<Cartao[]>([]);
   const [opened, { open, close }] = useDisclosure(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -42,6 +47,7 @@ export default function Transacoes() {
       tipo: 'despesa' as 'receita' | 'despesa', valor: '' as number | '',
       descricao: '', categoria: '', data: new Date(), tags: [] as string[],
       conta_id: null as string | null,
+      cartao_id: null as string | null,
     },
     validate: {
       valor: (v) => (!v || Number(v) <= 0 ? 'Valor deve ser maior que zero' : null),
@@ -61,12 +67,14 @@ export default function Transacoes() {
       if (categoriaFiltro) params.categoria = categoriaFiltro;
       if (tagFiltro) params.tag = tagFiltro;
 
-      const [transRes, contasRes] = await Promise.all([
+      const [transRes, contasRes, cartoesRes] = await Promise.all([
         api.get('/api/transacoes', { params }),
         api.get('/api/contas'),
+        api.get('/api/cartoes'),
       ]);
       setTransacoes(transRes.data || []);
       setContas(contasRes.data || []);
+      setCartoes(cartoesRes.data || []);
     } catch (err: any) {
       notifications.show({ title: 'Erro ao carregar transações', message: err.response?.data?.error || err.message, color: 'red' });
     }
@@ -76,17 +84,17 @@ export default function Transacoes() {
 
   useEffect(() => { fetchTransacoes(); }, [fetchTransacoes]);
 
-  const handleOpenNew = () => { setEditingId(null); form.reset(); form.setFieldValue('data', new Date()); form.setFieldValue('conta_id', null); open(); };
+  const handleOpenNew = () => { setEditingId(null); form.reset(); form.setFieldValue('data', new Date()); form.setFieldValue('conta_id', null); form.setFieldValue('cartao_id', null); open(); };
 
   const handleOpenEdit = (t: Transacao) => {
     setEditingId(t.id);
-    form.setValues({ tipo: t.tipo, valor: Number(t.valor), descricao: t.descricao, categoria: t.categoria, data: new Date(t.data + 'T12:00:00'), tags: t.tags || [], conta_id: t.conta_id ?? null });
+    form.setValues({ tipo: t.tipo, valor: Number(t.valor), descricao: t.descricao, categoria: t.categoria, data: new Date(t.data + 'T12:00:00'), tags: t.tags || [], conta_id: t.conta_id ?? null, cartao_id: (t as any).cartao_id ?? null });
     open();
   };
 
   const handleSubmit = async (values: typeof form.values) => {
     if (!user) return;
-    const payload = { tipo: values.tipo, valor: Number(values.valor), descricao: values.descricao, categoria: values.categoria, data: dayjs(values.data).format('YYYY-MM-DD'), tags: values.tags || [], conta_id: values.conta_id || null };
+    const payload = { tipo: values.tipo, valor: Number(values.valor), descricao: values.descricao, categoria: values.categoria, data: dayjs(values.data).format('YYYY-MM-DD'), tags: values.tags || [], conta_id: values.conta_id || null, cartao_id: (values as any).cartao_id || null };
 
     try {
       if (editingId) {
@@ -206,6 +214,16 @@ export default function Transacoes() {
                 clearable
                 size="md"
                 {...form.getInputProps('conta_id')}
+              />
+            )}
+            {cartoes.length > 0 && (
+              <Select
+                label="Cartão de Crédito"
+                placeholder="Sem cartão vinculado (opcional)"
+                data={cartoes.map(c => ({ value: c.id, label: `💳 ${c.nome}` }))}
+                clearable
+                size="md"
+                {...form.getInputProps('cartao_id')}
               />
             )}
             <Group justify="flex-end" mt="sm">
