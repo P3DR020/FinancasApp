@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import {
   Box, Button, Group, Paper, Text, Title, Stepper, Table, Badge,
   Select, Stack, LoadingOverlay, ActionIcon, Tooltip, Checkbox,
-  Alert, FileInput, ThemeIcon, rem, SegmentedControl,
+  Alert, FileInput, ThemeIcon, SegmentedControl,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import {

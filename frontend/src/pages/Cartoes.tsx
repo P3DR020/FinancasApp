@@ -532,9 +532,3 @@ export default function Cartoes() {
   );
 }
 
-function getProgressColor(pct: number) {
-  if (pct >= 90) return 'red';
-  if (pct >= 70) return 'orange';
-  if (pct >= 50) return 'yellow';
-  return 'teal';
-}
