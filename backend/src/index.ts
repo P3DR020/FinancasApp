@@ -14,6 +14,7 @@ import orcamentosRouter from './routes/orcamentos';
 import parcelamentosRouter from './routes/parcelamentos';
 import dashboardRouter from './routes/dashboard';
 import contasRouter from './routes/contas';
+import importarRouter from './routes/importar';
 
 dotenv.config();
 
@@ -38,7 +39,7 @@ app.use(cors({
   },
   credentials: true,
 }));
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 
 // Health check (sem auth)
 app.get('/api/health', (_req, res) => {
@@ -55,6 +56,7 @@ app.use('/api/orcamentos', authMiddleware, orcamentosRouter);
 app.use('/api/parcelamentos', authMiddleware, parcelamentosRouter);
 app.use('/api/dashboard', authMiddleware, dashboardRouter);
 app.use('/api/contas', authMiddleware, contasRouter);
+app.use('/api/importar', authMiddleware, importarRouter);
 
 // Start
 app.listen(PORT, () => {

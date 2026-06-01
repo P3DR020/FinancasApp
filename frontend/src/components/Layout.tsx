@@ -27,6 +27,7 @@ import {
   IconWallet,
   IconChevronRight,
   IconBuildingBank,
+  IconFileImport,
 } from '@tabler/icons-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -40,6 +41,7 @@ const navItems = [
   { label: 'Cartões', icon: IconCreditCard, path: '/cartoes' },
   { label: 'Orçamento', icon: IconChartPie, path: '/orcamento' },
   { label: 'Parcelamentos', icon: IconReceipt2, path: '/parcelamentos' },
+  { label: 'Importar Extrato', icon: IconFileImport, path: '/importar' },
 ];
 
 export default function Layout() {
