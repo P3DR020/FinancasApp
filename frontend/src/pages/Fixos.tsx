@@ -116,27 +116,27 @@ export default function Fixos() {
       </Group>
 
       <SimpleGrid cols={{ base: 1, sm: 3 }} mb="xl">
-        <Paper withBorder p="md" radius="md" className="stat-card stat-teal card-hover animate-fade-in-up" style={{ borderColor: 'var(--mantine-color-dark-4)' }}>
+        <Paper withBorder p="md" radius="md" className="stat-card stat-teal card-hover animate-fade-in-up" style={{ borderColor: 'var(--mantine-color-default-border)' }}>
           <Group justify="space-between" mb="xs"><Text size="xs" c="dimmed" fw={500} tt="uppercase">Receitas fixas/mês</Text><ThemeIcon variant="light" color="teal" size="sm" radius="xl"><IconArrowUpRight size={14} /></ThemeIcon></Group>
           <Text size="xl" fw={700} c="teal">{formatCurrency(totalReceitas)}</Text><Text size="xs" c="dimmed">{receitasFixas.length} ativas</Text>
         </Paper>
-        <Paper withBorder p="md" radius="md" className="stat-card stat-red card-hover animate-fade-in-up" style={{ animationDelay: '0.08s', borderColor: 'var(--mantine-color-dark-4)' }}>
+        <Paper withBorder p="md" radius="md" className="stat-card stat-red card-hover animate-fade-in-up" style={{ animationDelay: '0.08s', borderColor: 'var(--mantine-color-default-border)' }}>
           <Group justify="space-between" mb="xs"><Text size="xs" c="dimmed" fw={500} tt="uppercase">Despesas fixas/mês</Text><ThemeIcon variant="light" color="red" size="sm" radius="xl"><IconArrowDownRight size={14} /></ThemeIcon></Group>
           <Text size="xl" fw={700} c="red">{formatCurrency(totalDespesas)}</Text><Text size="xs" c="dimmed">{despesasFixas.length} ativas</Text>
         </Paper>
-        <Paper withBorder p="md" radius="md" className={`stat-card ${sobra >= 0 ? 'stat-blue' : 'stat-red'} card-hover animate-fade-in-up`} style={{ animationDelay: '0.16s', borderColor: 'var(--mantine-color-dark-4)' }}>
+        <Paper withBorder p="md" radius="md" className={`stat-card ${sobra >= 0 ? 'stat-blue' : 'stat-red'} card-hover animate-fade-in-up`} style={{ animationDelay: '0.16s', borderColor: 'var(--mantine-color-default-border)' }}>
           <Group justify="space-between" mb="xs"><Text size="xs" c="dimmed" fw={500} tt="uppercase">Sobra mensal</Text><ThemeIcon variant="light" color={sobra >= 0 ? 'blue' : 'red'} size="sm" radius="xl"><IconRepeat size={14} /></ThemeIcon></Group>
           <Text size="xl" fw={700} c={sobra >= 0 ? 'blue' : 'red'}>{formatCurrency(sobra)}</Text><Text size="xs" c="dimmed">Receitas - Despesas</Text>
         </Paper>
       </SimpleGrid>
 
       <SimpleGrid cols={{ base: 1, lg: 2 }} mb="xl">
-        <Paper withBorder p="lg" radius="md" className="animate-fade-in-up" style={{ animationDelay: '0.2s', borderColor: 'var(--mantine-color-dark-4)' }}>
+        <Paper withBorder p="lg" radius="md" className="animate-fade-in-up" style={{ animationDelay: '0.2s', borderColor: 'var(--mantine-color-default-border)' }}>
           <Group gap="xs" mb="md"><ThemeIcon variant="light" color="teal" size="md" radius="xl"><IconArrowUpRight size={18} /></ThemeIcon><Text fw={600}>Receitas fixas</Text><Badge color="teal" variant="light" size="sm" ml="auto">{formatCurrency(totalReceitas)}/mês</Badge></Group>
           {receitasFixas.length > 0 || fixos.filter(f => f.tipo === 'receita' && !f.ativo).length > 0 ? (
             <Stack gap="xs">
               {fixos.filter(f => f.tipo === 'receita').map((f) => (
-                <Paper key={f.id} withBorder p="sm" radius="md" style={{ borderColor: 'var(--mantine-color-dark-5)', background: 'var(--mantine-color-dark-7)', opacity: f.ativo ? 1 : 0.5 }}>
+                <Paper key={f.id} withBorder p="sm" radius="md" style={{ borderColor: 'var(--mantine-color-default-border)', background: 'var(--mantine-color-default-hover)', opacity: f.ativo ? 1 : 0.5 }}>
                   <Group justify="space-between">
                     <div>
                       <Group gap="xs"><Text size="sm" fw={600} td={f.ativo ? undefined : 'line-through'}>{f.nome}</Text>{!f.ativo && <Badge color="gray" size="xs" variant="light">Pausado</Badge>}</Group>
@@ -155,12 +155,12 @@ export default function Fixos() {
           ) : <Text c="dimmed" size="sm" ta="center" py="md">Nenhuma receita fixa cadastrada</Text>}
         </Paper>
 
-        <Paper withBorder p="lg" radius="md" className="animate-fade-in-up" style={{ animationDelay: '0.25s', borderColor: 'var(--mantine-color-dark-4)' }}>
+        <Paper withBorder p="lg" radius="md" className="animate-fade-in-up" style={{ animationDelay: '0.25s', borderColor: 'var(--mantine-color-default-border)' }}>
           <Group gap="xs" mb="md"><ThemeIcon variant="light" color="red" size="md" radius="xl"><IconArrowDownRight size={18} /></ThemeIcon><Text fw={600}>Despesas fixas</Text><Badge color="red" variant="light" size="sm" ml="auto">{formatCurrency(totalDespesas)}/mês</Badge></Group>
           {despesasFixas.length > 0 || fixos.filter(f => f.tipo === 'despesa' && !f.ativo).length > 0 ? (
             <Stack gap="xs">
               {fixos.filter(f => f.tipo === 'despesa').map((f) => (
-                <Paper key={f.id} withBorder p="sm" radius="md" style={{ borderColor: 'var(--mantine-color-dark-5)', background: 'var(--mantine-color-dark-7)', opacity: f.ativo ? 1 : 0.5 }}>
+                <Paper key={f.id} withBorder p="sm" radius="md" style={{ borderColor: 'var(--mantine-color-default-border)', background: 'var(--mantine-color-default-hover)', opacity: f.ativo ? 1 : 0.5 }}>
                   <Group justify="space-between">
                     <div>
                       <Group gap="xs"><Text size="sm" fw={600} td={f.ativo ? undefined : 'line-through'}>{f.nome}</Text>{!f.ativo && <Badge color="gray" size="xs" variant="light">Pausado</Badge>}</Group>

@@ -222,7 +222,7 @@ export default function ImportarExtrato() {
         </div>
       </Group>
 
-      <Paper withBorder p="xl" radius="md" mb="lg" className="animate-fade-in-up" style={{ borderColor: 'var(--mantine-color-dark-4)' }}>
+      <Paper withBorder p="xl" radius="md" mb="lg" className="animate-fade-in-up" style={{ borderColor: 'var(--mantine-color-default-border)' }}>
         <Stepper active={active} color="teal" size="sm" mb="xl">
           <Stepper.Step label="Upload" description="Selecionar arquivo" icon={<IconUpload size={18} />} />
           <Stepper.Step label="Revisar" description="Conferir dados" icon={<IconFileSpreadsheet size={18} />} />
@@ -301,7 +301,7 @@ export default function ImportarExtrato() {
             )}
 
             {/* Tabela */}
-            <Paper withBorder radius="md" style={{ borderColor: 'var(--mantine-color-dark-4)', overflow: 'auto', maxHeight: 500 }}>
+            <Paper withBorder radius="md" style={{ borderColor: 'var(--mantine-color-default-border)', overflow: 'auto', maxHeight: 500 }}>
               <Table striped highlightOnHover stickyHeader>
                 <Table.Thead>
                   <Table.Tr>

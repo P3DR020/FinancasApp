@@ -114,7 +114,7 @@ export default function Orcamento() {
 
       {orcamentos.length > 0 ? (
         <>
-          <Paper withBorder p="xl" radius="md" mb="xl" className="animate-fade-in-up" style={{ borderColor: isEstouradoGeral ? 'var(--mantine-color-red-6)' : 'var(--mantine-color-dark-4)' }}>
+          <Paper withBorder p="xl" radius="md" mb="xl" className="animate-fade-in-up" style={{ borderColor: isEstouradoGeral ? 'var(--mantine-color-red-6)' : 'var(--mantine-color-default-border)' }}>
             <Group justify="space-between" mb="xs">
               <Text size="sm" tt="uppercase" fw={600} c="dimmed">Progresso do Mês (Categorias Orçadas)</Text>
               {isEstouradoGeral ? <Badge color="red" leftSection={<IconAlertCircle size={12} />}>Orçamento Estourado</Badge> : <Badge color="teal" leftSection={<IconCheck size={12} />}>Dentro do limite</Badge>}
@@ -136,7 +136,7 @@ export default function Orcamento() {
               let color = 'teal'; if (pct > 75) color = 'yellow'; if (isDanger) color = 'orange'; if (isOver) color = 'red';
 
               return (
-                <Paper key={orc.id} withBorder p="md" radius="md" className="animate-fade-in-up" style={{ animationDelay: `${i * 0.05}s`, borderColor: isOver ? 'var(--mantine-color-red-9)' : 'var(--mantine-color-dark-4)' }}>
+                <Paper key={orc.id} withBorder p="md" radius="md" className="animate-fade-in-up" style={{ animationDelay: `${i * 0.05}s`, borderColor: isOver ? 'var(--mantine-color-red-9)' : 'var(--mantine-color-default-border)' }}>
                   <Group justify="space-between" mb="sm" wrap="nowrap">
                     <Text fw={600} size="md" lineClamp={1}>{orc.categoria}</Text>
                     <Tooltip label="Excluir"><ActionIcon variant="subtle" color="red" size="sm" onClick={() => handleDelete(orc.id)}><IconTrash size={16} /></ActionIcon></Tooltip>

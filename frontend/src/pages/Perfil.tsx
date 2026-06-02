@@ -78,7 +78,7 @@ export default function Perfil() {
       <SimpleGrid cols={{ base: 1, lg: 2 }} mb="xl">
         {/* Profile Card */}
         <Paper withBorder p="xl" radius="md" className="animate-fade-in-up"
-          style={{ borderColor: 'var(--mantine-color-dark-4)' }}>
+          style={{ borderColor: 'var(--mantine-color-default-border)' }}>
           <Stack align="center" mb="lg">
             <Avatar size={80} radius="xl"
               style={{ background: 'linear-gradient(135deg, var(--mantine-color-teal-5), var(--mantine-color-teal-7))', fontSize: 32 }}>
@@ -119,7 +119,7 @@ export default function Perfil() {
 
         {/* Edit Name */}
         <Paper withBorder p="xl" radius="md" pos="relative" className="animate-fade-in-up"
-          style={{ animationDelay: '0.08s', borderColor: 'var(--mantine-color-dark-4)' }}>
+          style={{ animationDelay: '0.08s', borderColor: 'var(--mantine-color-default-border)' }}>
           <LoadingOverlay visible={loadingProfile} overlayProps={{ blur: 2 }} loaderProps={{ color: 'teal', type: 'bars' }} />
 
           <Group gap="xs" mb="lg">
@@ -160,7 +160,7 @@ export default function Perfil() {
 
       {/* Change Password */}
       <Paper withBorder p="xl" radius="md" pos="relative" className="animate-fade-in-up"
-        style={{ animationDelay: '0.16s', borderColor: 'var(--mantine-color-dark-4)' }}>
+        style={{ animationDelay: '0.16s', borderColor: 'var(--mantine-color-default-border)' }}>
         <LoadingOverlay visible={loadingPassword} overlayProps={{ blur: 2 }} loaderProps={{ color: 'teal', type: 'bars' }} />
 
         <Group gap="xs" mb="lg">

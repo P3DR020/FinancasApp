@@ -135,11 +135,11 @@ export default function Parcelamentos() {
 
       {parcelamentos.length > 0 && (
         <SimpleGrid cols={{ base: 1, sm: 2 }} mb="xl">
-          <Paper withBorder p="md" radius="md" className="stat-card stat-blue card-hover animate-fade-in-up" style={{ borderColor: 'var(--mantine-color-dark-4)' }}>
+          <Paper withBorder p="md" radius="md" className="stat-card stat-blue card-hover animate-fade-in-up" style={{ borderColor: 'var(--mantine-color-default-border)' }}>
             <Group justify="space-between" mb="xs"><Text size="xs" c="dimmed" fw={500} tt="uppercase">Impacto Mensal</Text><ThemeIcon variant="light" color="blue" size="sm" radius="xl"><IconCalendarEvent size={14} /></ThemeIcon></Group>
             <Text size="xl" fw={700} c="blue">{formatCurrency(totalMensal)}</Text><Text size="xs" c="dimmed">Soma das parcelas ativas por mês</Text>
           </Paper>
-          <Paper withBorder p="md" radius="md" className="stat-card stat-red card-hover animate-fade-in-up" style={{ animationDelay: '0.08s', borderColor: 'var(--mantine-color-dark-4)' }}>
+          <Paper withBorder p="md" radius="md" className="stat-card stat-red card-hover animate-fade-in-up" style={{ animationDelay: '0.08s', borderColor: 'var(--mantine-color-default-border)' }}>
             <Group justify="space-between" mb="xs"><Text size="xs" c="dimmed" fw={500} tt="uppercase">Total Restante (Dívida)</Text><ThemeIcon variant="light" color="red" size="sm" radius="xl"><IconCoin size={14} /></ThemeIcon></Group>
             <Text size="xl" fw={700} c="red">{formatCurrency(totalDevido)}</Text><Text size="xs" c="dimmed">Soma das parcelas a vencer</Text>
           </Paper>
@@ -152,7 +152,7 @@ export default function Parcelamentos() {
           const progresso = (p.parcelas_pagas / p.parcelas_total) * 100;
           const cartao = p.cartao_id ? cartoes.find(c => c.id === p.cartao_id) : null;
           return (
-            <Paper key={p.id} withBorder p="lg" radius="md" className="animate-fade-in-up" style={{ animationDelay: `${i * 0.05}s`, borderColor: p.concluido ? 'var(--mantine-color-teal-7)' : 'var(--mantine-color-dark-4)', background: 'var(--mantine-color-dark-8)', position: 'relative', overflow: 'hidden' }}>
+            <Paper key={p.id} withBorder p="lg" radius="md" className="animate-fade-in-up" style={{ animationDelay: `${i * 0.05}s`, borderColor: p.concluido ? 'var(--mantine-color-teal-7)' : 'var(--mantine-color-default-border)', background: 'var(--mantine-color-default)', position: 'relative', overflow: 'hidden' }}>
               {p.concluido && <Box style={{ position: 'absolute', top: 12, right: -30, background: 'var(--mantine-color-teal-6)', color: 'white', padding: '4px 30px', transform: 'rotate(45deg)', fontSize: 10, fontWeight: 700, zIndex: 1 }}>QUITADO</Box>}
               <Group justify="space-between" mb="xs" pr={p.concluido ? 30 : 0}>
                 <Group gap="xs"><ThemeIcon variant="light" color={p.concluido ? 'teal' : 'blue'} size="md" radius="xl"><IconReceipt2 size={16} /></ThemeIcon><Text fw={600} size="lg">{p.descricao}</Text></Group>

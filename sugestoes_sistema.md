@@ -150,7 +150,7 @@ Você já tem `Cartoes.tsx`, mas pode expandir com:
 
 ## 💡 Sugestões Novas (além da sua lista)
 
-### 10. 📊 Relatórios Avançados
+### 10. 📊 Relatórios Avançados 
 > Página dedicada com análises financeiras
 
 - Comparativo mês a mês detalhado

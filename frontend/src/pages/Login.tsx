@@ -56,10 +56,6 @@ export default function Login() {
           w={420}
           radius="lg"
           className="animate-fade-in-up"
-          style={{
-            border: '1px solid var(--mantine-color-dark-4)',
-            background: 'var(--mantine-color-dark-8)',
-          }}
         >
           <Stack align="center" mb="lg">
             <Box

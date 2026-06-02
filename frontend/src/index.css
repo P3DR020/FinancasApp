@@ -22,23 +22,33 @@ body {
   font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
-/* Scrollbar custom (dark theme) */
+/* Scrollbar custom */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-::-webkit-scrollbar-track {
+[data-mantine-color-scheme="dark"] ::-webkit-scrollbar-track {
   background: var(--mantine-color-dark-8);
 }
+[data-mantine-color-scheme="light"] ::-webkit-scrollbar-track {
+  background: var(--mantine-color-gray-1);
+}
 
-::-webkit-scrollbar-thumb {
+[data-mantine-color-scheme="dark"] ::-webkit-scrollbar-thumb {
   background: var(--mantine-color-dark-4);
   border-radius: 4px;
 }
+[data-mantine-color-scheme="light"] ::-webkit-scrollbar-thumb {
+  background: var(--mantine-color-gray-4);
+  border-radius: 4px;
+}
 
-::-webkit-scrollbar-thumb:hover {
+[data-mantine-color-scheme="dark"] ::-webkit-scrollbar-thumb:hover {
   background: var(--mantine-color-dark-3);
+}
+[data-mantine-color-scheme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--mantine-color-gray-5);
 }
 
 /* Animations */
@@ -121,7 +131,14 @@ body {
 /* Auth pages background */
 .auth-bg {
   min-height: 100vh;
+}
+
+[data-mantine-color-scheme="dark"] .auth-bg {
   background: radial-gradient(ellipse at top, var(--mantine-color-dark-7) 0%, var(--mantine-color-dark-9) 70%);
+}
+
+[data-mantine-color-scheme="light"] .auth-bg {
+  background: radial-gradient(ellipse at top, var(--mantine-color-gray-1) 0%, var(--mantine-color-gray-3) 70%);
 }
 
 /* Logo styling */

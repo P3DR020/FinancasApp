@@ -223,7 +223,7 @@ export default function Cartoes() {
             { label: 'Disponível', value: disponivelTotal, color: disponivelTotal >= 0 ? 'teal' : 'red', sub: 'Limite não utilizado' },
           ].map((stat, i) => (
             <Paper key={i} withBorder p="md" radius="md" className="animate-fade-in-up"
-              style={{ animationDelay: `${i * 0.06}s`, borderColor: 'var(--mantine-color-dark-4)' }}>
+              style={{ animationDelay: `${i * 0.06}s`, borderColor: 'var(--mantine-color-default-border)' }}>
               <Text size="xs" c="dimmed" fw={500} tt="uppercase" mb={4}>{stat.label}</Text>
               <Text size="xl" fw={700} c={stat.color}>{fmt(stat.value)}</Text>
               <Text size="xs" c="dimmed" mt={2}>{stat.sub}</Text>
@@ -244,9 +244,9 @@ export default function Cartoes() {
             <Paper key={cartao.id} withBorder p="lg" radius="md" className="animate-fade-in-up"
               style={{
                 animationDelay: `${i * 0.08}s`,
-                borderColor: cartao.ativo ? cartao.cor : 'var(--mantine-color-dark-4)',
+                borderColor: cartao.ativo ? cartao.cor : 'var(--mantine-color-default-border)',
                 borderWidth: 1.5,
-                background: 'var(--mantine-color-dark-8)',
+                background: 'var(--mantine-color-default)',
                 opacity: cartao.ativo ? 1 : 0.6,
                 position: 'relative',
                 overflow: 'hidden',
@@ -306,7 +306,7 @@ export default function Cartoes() {
 
               {/* Fechamento e vencimento */}
               <SimpleGrid cols={2} p="sm" mb="md"
-                style={{ background: 'var(--mantine-color-dark-7)', borderRadius: 'var(--mantine-radius-md)' }}>
+                style={{ background: 'var(--mantine-color-default-hover)', borderRadius: 'var(--mantine-radius-md)' }}>
                 <Group gap={4}>
                   <IconLock size={12} color="var(--mantine-color-dimmed)" />
                   <div>
@@ -403,7 +403,7 @@ export default function Cartoes() {
               )}
 
               {/* Ring de uso do limite */}
-              <Paper withBorder p="md" radius="md" style={{ borderColor: 'var(--mantine-color-dark-4)' }}>
+              <Paper withBorder p="md" radius="md" style={{ borderColor: 'var(--mantine-color-default-border)' }}>
                 <Group justify="space-between" align="flex-start">
                   <div>
                     <Text size="xs" c="dimmed" tt="uppercase" fw={600} mb={4}>Fatura total</Text>
@@ -437,7 +437,7 @@ export default function Cartoes() {
 
               {/* Gastos por categoria */}
               {Object.keys(faturaData.porCategoria).length > 0 && (
-                <Paper withBorder p="md" radius="md" style={{ borderColor: 'var(--mantine-color-dark-4)' }}>
+                <Paper withBorder p="md" radius="md" style={{ borderColor: 'var(--mantine-color-default-border)' }}>
                   <Text size="sm" fw={600} mb="sm">Por categoria</Text>
                   <Stack gap={6}>
                     {Object.entries(faturaData.porCategoria)
@@ -491,7 +491,7 @@ export default function Cartoes() {
                   </Table>
                 </ScrollArea>
               ) : (
-                <Paper withBorder p="lg" radius="md" style={{ borderColor: 'var(--mantine-color-dark-4)' }}>
+                <Paper withBorder p="lg" radius="md" style={{ borderColor: 'var(--mantine-color-default-border)' }}>
                   <Stack align="center" py="md">
                     <Text c="dimmed" size="sm">Nenhum lançamento neste mês</Text>
                     <Text c="dimmed" size="xs">Associe transações a este cartão para ver a fatura</Text>

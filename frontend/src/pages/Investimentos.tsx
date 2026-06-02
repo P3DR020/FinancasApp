@@ -133,15 +133,15 @@ export default function Investimentos() {
       {investimentos.length > 0 && (
         <>
           <SimpleGrid cols={{ base: 1, sm: 3 }} mb="xl">
-            <Paper withBorder p="md" radius="md" className="stat-card card-hover animate-fade-in-up" style={{ borderColor: 'var(--mantine-color-dark-4)' }}>
+            <Paper withBorder p="md" radius="md" className="stat-card card-hover animate-fade-in-up" style={{ borderColor: 'var(--mantine-color-default-border)' }}>
               <Group justify="space-between" mb="xs"><Text size="xs" c="dimmed" fw={500} tt="uppercase">Total Investido</Text><ThemeIcon variant="light" color="blue" size="sm" radius="xl"><IconChartLine size={14} /></ThemeIcon></Group>
               <Text size="xl" fw={700} c="blue">{formatCurrency(totalInvestido)}</Text>
             </Paper>
-            <Paper withBorder p="md" radius="md" className="stat-card stat-teal card-hover animate-fade-in-up" style={{ animationDelay: '0.08s', borderColor: 'var(--mantine-color-dark-4)' }}>
+            <Paper withBorder p="md" radius="md" className="stat-card stat-teal card-hover animate-fade-in-up" style={{ animationDelay: '0.08s', borderColor: 'var(--mantine-color-default-border)' }}>
               <Group justify="space-between" mb="xs"><Text size="xs" c="dimmed" fw={500} tt="uppercase">Saldo Atual</Text><ThemeIcon variant="light" color="teal" size="sm" radius="xl"><IconBuildingBank size={14} /></ThemeIcon></Group>
               <Text size="xl" fw={700} c="teal">{formatCurrency(totalAtual)}</Text>
             </Paper>
-            <Paper withBorder p="md" radius="md" className={`stat-card ${rendimentoGeral >= 0 ? 'stat-teal' : 'stat-red'} card-hover animate-fade-in-up`} style={{ animationDelay: '0.16s', borderColor: 'var(--mantine-color-dark-4)' }}>
+            <Paper withBorder p="md" radius="md" className={`stat-card ${rendimentoGeral >= 0 ? 'stat-teal' : 'stat-red'} card-hover animate-fade-in-up`} style={{ animationDelay: '0.16s', borderColor: 'var(--mantine-color-default-border)' }}>
               <Group justify="space-between" mb="xs"><Text size="xs" c="dimmed" fw={500} tt="uppercase">Rentabilidade</Text><ThemeIcon variant="light" color={rendimentoGeral >= 0 ? 'teal' : 'red'} size="sm" radius="xl">{rendimentoGeral >= 0 ? <IconArrowUpRight size={14} /> : <IconArrowDownRight size={14} />}</ThemeIcon></Group>
               <Group gap="xs" align="flex-end">
                 <Text size="xl" fw={700} c={rendimentoGeral >= 0 ? 'teal' : 'red'}>{rendimentoGeral >= 0 ? '+' : ''}{formatCurrency(rendimentoGeral)}</Text>
@@ -151,11 +151,11 @@ export default function Investimentos() {
           </SimpleGrid>
 
           <SimpleGrid cols={{ base: 1, md: 2 }} mb="xl">
-            <Paper withBorder p="md" radius="md" className="animate-fade-in-up" style={{ animationDelay: '0.24s', borderColor: 'var(--mantine-color-dark-4)' }}>
+            <Paper withBorder p="md" radius="md" className="animate-fade-in-up" style={{ animationDelay: '0.24s', borderColor: 'var(--mantine-color-default-border)' }}>
               <Text fw={600} mb="md">Composição da Carteira</Text>
               <Center h={260}><DonutChart data={dataPorTipo} tooltipDataSource="segment" withLabelsLine withLabels chartLabel="Alocação" /></Center>
             </Paper>
-            <Paper withBorder p="md" radius="md" className="animate-fade-in-up" style={{ animationDelay: '0.32s', borderColor: 'var(--mantine-color-dark-4)' }}>
+            <Paper withBorder p="md" radius="md" className="animate-fade-in-up" style={{ animationDelay: '0.32s', borderColor: 'var(--mantine-color-default-border)' }}>
               <Text fw={600} mb="md">Valor por Corretora</Text>
               <BarChart h={260} data={dataPorCorretora} dataKey="corretora" series={[{ name: 'Valor Atual', color: 'violet.6' }]} tickLine="y" gridAxis="y" />
             </Paper>
@@ -170,7 +170,7 @@ export default function Investimentos() {
           const rendPct = Number(inv.valor_investido) > 0 ? (rend / Number(inv.valor_investido)) * 100 : 0;
           const pos = rend >= 0;
           return (
-            <Paper key={inv.id} withBorder p="lg" radius="md" className="animate-fade-in-up" style={{ animationDelay: `${i * 0.05}s`, borderColor: 'var(--mantine-color-dark-4)', background: 'var(--mantine-color-dark-8)' }}>
+            <Paper key={inv.id} withBorder p="lg" radius="md" className="animate-fade-in-up" style={{ animationDelay: `${i * 0.05}s`, borderColor: 'var(--mantine-color-default-border)', background: 'var(--mantine-color-default)' }}>
               <Group justify="space-between" mb="sm">
                 <Group gap="xs">
                   <Badge color={tipoColors[inv.tipo] || 'gray'} variant="light">{getTipoLabel(inv.tipo)}</Badge>
@@ -187,7 +187,7 @@ export default function Investimentos() {
                 <Text size="xs" c="dimmed">Compra: {dayjs(inv.data_compra).format('DD/MM/YYYY')}</Text>
               </Group>
 
-              <SimpleGrid cols={3} mt="md" p="sm" style={{ background: 'var(--mantine-color-dark-7)', borderRadius: 'var(--mantine-radius-md)' }}>
+              <SimpleGrid cols={3} mt="md" p="sm" style={{ background: 'var(--mantine-color-default-hover)', borderRadius: 'var(--mantine-radius-md)' }}>
                 <div><Text size="xs" c="dimmed" tt="uppercase">Investido</Text><Text fw={600} size="sm">{formatCurrency(Number(inv.valor_investido))}</Text></div>
                 <div><Text size="xs" c="dimmed" tt="uppercase">Atual</Text><Text fw={600} size="sm" c={pos ? 'teal' : 'red'}>{formatCurrency(Number(inv.valor_atual))}</Text></div>
                 <div>

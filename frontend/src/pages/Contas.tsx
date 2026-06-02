@@ -200,7 +200,7 @@ export default function Contas() {
       {/* Saldo total consolidado */}
       {contas.length > 0 && (
         <Paper withBorder p="lg" radius="md" mb="xl" className="animate-fade-in-up"
-          style={{ borderColor: 'var(--mantine-color-dark-4)', background: 'var(--mantine-color-dark-8)' }}>
+          style={{ borderColor: 'var(--mantine-color-default-border)', background: 'var(--mantine-color-default)' }}>
           <Group justify="space-between">
             <div>
               <Text size="xs" c="dimmed" tt="uppercase" fw={600}>Saldo total consolidado</Text>
@@ -232,7 +232,7 @@ export default function Contas() {
                   animationDelay: `${i * 0.08}s`,
                   borderColor: conta.cor,
                   borderWidth: 1.5,
-                  background: 'var(--mantine-color-dark-8)',
+                  background: 'var(--mantine-color-default)',
                   position: 'relative',
                   overflow: 'hidden',
                 }}
@@ -285,7 +285,7 @@ export default function Contas() {
         </SimpleGrid>
       ) : (
         <Paper withBorder p="xl" radius="md" className="animate-fade-in-up"
-          style={{ borderColor: 'var(--mantine-color-dark-4)' }}>
+          style={{ borderColor: 'var(--mantine-color-default-border)' }}>
           <Stack align="center" py="xl">
             <ThemeIcon size={64} radius="xl" variant="light" color="teal">
               <IconBuildingBank size={32} />
@@ -320,7 +320,7 @@ export default function Contas() {
                         width: 40, height: 40, borderRadius: 8, fontSize: 22,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         border: selectedIcone === ic ? `2px solid ${form.values.cor}` : '2px solid transparent',
-                        background: selectedIcone === ic ? 'var(--mantine-color-dark-5)' : 'var(--mantine-color-dark-7)',
+                        background: selectedIcone === ic ? 'var(--mantine-color-default-border)' : 'var(--mantine-color-default-hover)',
                         cursor: 'pointer', transition: 'all 0.15s',
                       }}
                     >

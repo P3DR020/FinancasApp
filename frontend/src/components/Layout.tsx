@@ -11,6 +11,9 @@ import {
   UnstyledButton,
   Box,
   Divider,
+  ActionIcon,
+  useMantineColorScheme,
+  useComputedColorScheme,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import {
@@ -28,6 +31,8 @@ import {
   IconChevronRight,
   IconBuildingBank,
   IconFileImport,
+  IconSun,
+  IconMoon,
 } from '@tabler/icons-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -50,6 +55,12 @@ export default function Layout() {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const [menuOpened, setMenuOpened] = useState(false);
+  const { setColorScheme } = useMantineColorScheme();
+  const computedColorScheme = useComputedColorScheme('light');
+  
+  const toggleColorScheme = () => {
+    setColorScheme(computedColorScheme === 'dark' ? 'light' : 'dark');
+  };
 
   const userName = user?.user_metadata?.nome || user?.email?.split('@')[0] || 'Usuário';
   const userInitial = userName.charAt(0).toUpperCase();
@@ -68,19 +79,9 @@ export default function Layout() {
         collapsed: { mobile: !opened },
       }}
       padding="md"
-      styles={{
-        main: {
-          background: 'var(--mantine-color-dark-9)',
-        },
-      }}
     >
       {/* Header */}
-      <AppShell.Header
-        style={{
-          borderBottom: '1px solid var(--mantine-color-dark-5)',
-          background: 'var(--mantine-color-dark-8)',
-        }}
-      >
+      <AppShell.Header>
         <Group h="100%" px="md" justify="space-between">
           <Group>
             <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
@@ -104,7 +105,21 @@ export default function Layout() {
             </Group>
           </Group>
 
-          <Menu
+          <Group>
+            <ActionIcon
+              onClick={toggleColorScheme}
+              variant="default"
+              size="lg"
+              aria-label="Toggle color scheme"
+            >
+              {computedColorScheme === 'dark' ? (
+                <IconSun size={20} stroke={1.5} />
+              ) : (
+                <IconMoon size={20} stroke={1.5} />
+              )}
+            </ActionIcon>
+
+            <Menu
             opened={menuOpened}
             onChange={setMenuOpened}
             shadow="lg"
@@ -157,17 +172,12 @@ export default function Layout() {
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>
+          </Group>
         </Group>
       </AppShell.Header>
 
       {/* Navbar */}
-      <AppShell.Navbar
-        p="md"
-        style={{
-          borderRight: '1px solid var(--mantine-color-dark-5)',
-          background: 'var(--mantine-color-dark-8)',
-        }}
-      >
+      <AppShell.Navbar p="md">
         <Box style={{ flex: 1 }}>
           <Text size="xs" fw={600} c="dimmed" tt="uppercase" mb="sm" px="sm">
             Menu

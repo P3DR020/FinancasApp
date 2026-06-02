@@ -118,7 +118,7 @@ export default function Metas() {
       </Group>
 
       {metas.length > 0 && (
-        <Paper withBorder p="xl" radius="md" mb="xl" className="animate-fade-in-up" style={{ borderColor: 'var(--mantine-color-dark-4)' }}>
+        <Paper withBorder p="xl" radius="md" mb="xl" className="animate-fade-in-up" style={{ borderColor: 'var(--mantine-color-default-border)' }}>
           <Group align="center" gap="xl" wrap="nowrap">
             <RingProgress size={120} thickness={12} roundCaps sections={[{ value: progressGeral, color: progressGeral >= 100 ? 'teal' : 'cyan' }]} label={<Center><ThemeIcon color={progressGeral >= 100 ? 'teal' : 'cyan'} variant="light" radius="xl" size="xl"><IconTrophy size={22} /></ThemeIcon></Center>} />
             <Box style={{ flex: 1 }}>
@@ -142,7 +142,7 @@ export default function Metas() {
           const progress = Math.min((Number(meta.valor_atual) / Number(meta.valor_alvo)) * 100, 100);
           const isLate = meta.data_limite && !meta.concluida && dayjs(meta.data_limite).isBefore(dayjs());
           return (
-            <Paper key={meta.id} withBorder p="lg" radius="md" className="animate-fade-in-up" style={{ animationDelay: `${i * 0.08}s`, borderColor: meta.concluida ? 'var(--mantine-color-teal-7)' : 'var(--mantine-color-dark-4)', background: 'var(--mantine-color-dark-8)', position: 'relative', overflow: 'hidden' }}>
+            <Paper key={meta.id} withBorder p="lg" radius="md" className="animate-fade-in-up" style={{ animationDelay: `${i * 0.08}s`, borderColor: meta.concluida ? 'var(--mantine-color-teal-7)' : 'var(--mantine-color-default-border)', background: 'var(--mantine-color-default)', position: 'relative', overflow: 'hidden' }}>
               {meta.concluida && (<Box style={{ position: 'absolute', top: 12, right: -30, background: 'var(--mantine-color-teal-6)', color: 'white', padding: '4px 30px', transform: 'rotate(45deg)', fontSize: 10, fontWeight: 700, zIndex: 1 }}>CONCLUÍDA</Box>)}
               <Group justify="space-between" mb="xs" pr={meta.concluida ? 30 : 0} wrap="nowrap">
                 <Group gap="xs" wrap="nowrap">
@@ -163,7 +163,7 @@ export default function Metas() {
               </Group>
 
               {(meta.data_limite || meta.local_guardado) && (
-                <Stack gap="xs" mb="lg" p="sm" style={{ background: 'var(--mantine-color-dark-7)', borderRadius: 'var(--mantine-radius-md)' }}>
+                <Stack gap="xs" mb="lg" p="sm" style={{ background: 'var(--mantine-color-default-hover)', borderRadius: 'var(--mantine-radius-md)' }}>
                   {meta.local_guardado && (
                     <Group gap="xs"><IconMapPin size={14} color="var(--mantine-color-dimmed)" /><Text size="xs" c="dimmed" lineClamp={1} style={{ flex: 1 }}>Guardado em: <Text span fw={500}>{meta.local_guardado}</Text></Text></Group>
                   )}
@@ -209,7 +209,7 @@ export default function Metas() {
         {selectedMeta && (
           <form onSubmit={formDeposit.onSubmit(handleSubmitDeposit)}>
             <Stack gap="md">
-              <Paper withBorder p="md" radius="md" style={{ background: 'var(--mantine-color-dark-7)', borderColor: 'var(--mantine-color-dark-5)' }}>
+              <Paper withBorder p="md" radius="md" style={{ background: 'var(--mantine-color-default-hover)', borderColor: 'var(--mantine-color-default-border)' }}>
                 <Text size="sm" c="dimmed" mb={4}>Meta selecionada:</Text>
                 <Text fw={600} size="md" lineClamp={1}>{selectedMeta.nome}</Text>
                 <Group justify="space-between" mt="sm">

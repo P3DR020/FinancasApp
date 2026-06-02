@@ -42,8 +42,8 @@ export default function RecuperarSenha() {
           radius="lg"
           className="animate-fade-in-up"
           style={{
-            border: '1px solid var(--mantine-color-dark-4)',
-            background: 'var(--mantine-color-dark-8)',
+            border: '1px solid var(--mantine-color-default-border)',
+            background: 'var(--mantine-color-default)',
           }}
         >
           <Stack align="center" mb="lg">

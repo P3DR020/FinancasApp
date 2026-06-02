@@ -141,7 +141,7 @@ export default function Transacoes() {
       </Group>
 
       {/* Filters */}
-      <Paper withBorder p="md" radius="md" mb="lg" className="animate-fade-in-up" style={{ borderColor: 'var(--mantine-color-dark-4)' }}>
+      <Paper withBorder p="md" radius="md" mb="lg" className="animate-fade-in-up" style={{ borderColor: 'var(--mantine-color-default-border)' }}>
         <Group align="flex-end" gap="md">
           <IconFilter size={18} color="var(--mantine-color-dimmed)" />
           <MonthPickerInput label="Mês" placeholder="Selecionar mês" value={mesFiltro} onChange={setMesFiltro} clearable w={180} size="sm" />
@@ -159,7 +159,7 @@ export default function Transacoes() {
       </Group>
 
       {/* Table */}
-      <Paper withBorder radius="md" className="animate-fade-in-up" style={{ animationDelay: '0.1s', borderColor: 'var(--mantine-color-dark-4)', overflow: 'hidden' }}>
+      <Paper withBorder radius="md" className="animate-fade-in-up" style={{ animationDelay: '0.1s', borderColor: 'var(--mantine-color-default-border)', overflow: 'hidden' }}>
         {transacoes.length > 0 ? (
           <Table striped highlightOnHover>
             <Table.Thead>

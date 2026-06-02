@@ -218,7 +218,7 @@ export default function Dashboard() {
             className={`stat-card ${card.cssClass} card-hover animate-fade-in-up`}
             style={{
               animationDelay: `${i * 0.08}s`,
-              borderColor: 'var(--mantine-color-dark-4)',
+              borderColor: 'var(--mantine-color-default-border)',
             }}
           >
             <Group justify="space-between" mb="xs">
@@ -243,7 +243,7 @@ export default function Dashboard() {
       <SimpleGrid cols={{ base: 1, lg: 2 }} mb="xl">
         <Paper
           withBorder p="lg" radius="md" className="animate-fade-in-up"
-          style={{ animationDelay: '0.32s', borderColor: 'var(--mantine-color-dark-4)' }}
+          style={{ animationDelay: '0.32s', borderColor: 'var(--mantine-color-default-border)' }}
         >
           <Text fw={600} mb="md">Despesas por categoria</Text>
           {donutData.length > 0 ? (
@@ -257,7 +257,7 @@ export default function Dashboard() {
 
         <Paper
           withBorder p="lg" radius="md" className="animate-fade-in-up"
-          style={{ animationDelay: '0.4s', borderColor: 'var(--mantine-color-dark-4)' }}
+          style={{ animationDelay: '0.4s', borderColor: 'var(--mantine-color-default-border)' }}
         >
           <Text fw={600} mb="md">Receitas vs Despesas (últimos 6 meses)</Text>
           {barData.length > 0 ? (
@@ -275,7 +275,7 @@ export default function Dashboard() {
         {/* Fixos Summary */}
         <Paper
           withBorder p="lg" radius="md" className="animate-fade-in-up"
-          style={{ animationDelay: '0.48s', borderColor: 'var(--mantine-color-dark-4)' }}
+          style={{ animationDelay: '0.48s', borderColor: 'var(--mantine-color-default-border)' }}
         >
           <Group justify="space-between" mb="md">
             <Group gap="xs">
@@ -323,7 +323,7 @@ export default function Dashboard() {
                   <Stack gap={4}>
                     {receitasFixas.map((f) => (
                       <Group key={f.id} justify="space-between" py={3} px={6}
-                        style={{ borderRadius: 6, background: 'var(--mantine-color-dark-7)' }}>
+                        style={{ borderRadius: 6, background: 'var(--mantine-color-default-hover)' }}>
                         <Group gap="xs">
                           <Text size="sm">{f.nome}</Text>
                           <Text size="xs" c="dimmed">({f.categoria})</Text>
@@ -348,7 +348,7 @@ export default function Dashboard() {
                   <Stack gap={4}>
                     {despesasFixas.map((f) => (
                       <Group key={f.id} justify="space-between" py={3} px={6}
-                        style={{ borderRadius: 6, background: 'var(--mantine-color-dark-7)' }}>
+                        style={{ borderRadius: 6, background: 'var(--mantine-color-default-hover)' }}>
                         <Group gap="xs">
                           <Text size="sm">{f.nome}</Text>
                           <Text size="xs" c="dimmed">({f.categoria})</Text>
@@ -371,7 +371,7 @@ export default function Dashboard() {
         {/* Investimentos Summary */}
         <Paper
           withBorder p="lg" radius="md" className="animate-fade-in-up"
-          style={{ animationDelay: '0.56s', borderColor: 'var(--mantine-color-dark-4)' }}
+          style={{ animationDelay: '0.56s', borderColor: 'var(--mantine-color-default-border)' }}
         >
           <Group justify="space-between" mb="md">
             <Group gap="xs">
@@ -409,7 +409,7 @@ export default function Dashboard() {
                   const rend = Number(inv.valor_atual) - Number(inv.valor_investido);
                   const rendPct = Number(inv.valor_investido) > 0 ? ((rend / Number(inv.valor_investido)) * 100) : 0;
                   return (
-                    <Group key={inv.id} justify="space-between" py={4} style={{ borderBottom: '1px solid var(--mantine-color-dark-5)' }}>
+                    <Group key={inv.id} justify="space-between" py={4} style={{ borderBottom: '1px solid var(--mantine-color-default-border)' }}>
                       <Group gap="xs">
                         <Badge color={tipoColors[inv.tipo] || 'gray'} variant="light" size="xs">
                           {tipoLabels[inv.tipo] || inv.tipo}
@@ -442,7 +442,7 @@ export default function Dashboard() {
       {/* Metas Summary */}
       <Paper
         withBorder p="lg" radius="md" mb="xl" className="animate-fade-in-up"
-        style={{ animationDelay: '0.64s', borderColor: 'var(--mantine-color-dark-4)' }}
+        style={{ animationDelay: '0.64s', borderColor: 'var(--mantine-color-default-border)' }}
       >
         <Group justify="space-between" mb="md">
           <Group gap="xs">
@@ -469,8 +469,8 @@ export default function Dashboard() {
                   withBorder p="md" radius="md"
                   className="card-hover"
                   style={{
-                    borderColor: meta.concluida ? 'var(--mantine-color-teal-7)' : 'var(--mantine-color-dark-5)',
-                    background: 'var(--mantine-color-dark-7)',
+                    borderColor: meta.concluida ? 'var(--mantine-color-teal-7)' : 'var(--mantine-color-default-border)',
+                    background: 'var(--mantine-color-default-hover)',
                     cursor: 'pointer',
                   }}
                   onClick={() => navigate('/metas')}
@@ -501,7 +501,7 @@ export default function Dashboard() {
       {/* Recent Transactions */}
       <Paper
         withBorder p="lg" radius="md" className="animate-fade-in-up"
-        style={{ animationDelay: '0.72s', borderColor: 'var(--mantine-color-dark-4)' }}
+        style={{ animationDelay: '0.72s', borderColor: 'var(--mantine-color-default-border)' }}
       >
         <Group justify="space-between" mb="md">
           <Text fw={600}>Últimas transações</Text>
