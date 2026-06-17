@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
+import cron from 'node-cron';
 import { authMiddleware } from './middleware/auth';
 
 // Routes
@@ -57,6 +58,26 @@ app.use('/api/parcelamentos', authMiddleware, parcelamentosRouter);
 app.use('/api/dashboard', authMiddleware, dashboardRouter);
 app.use('/api/contas', authMiddleware, contasRouter);
 app.use('/api/importar', authMiddleware, importarRouter);
+
+// ─── Keep-Alive: Self-ping para evitar cold start no Render Free ───
+// O Render free tier desliga o servidor após ~15 min de inatividade.
+// Este cron pinga o próprio /api/health a cada 14 minutos para manter ativo.
+const RENDER_URL = process.env.RENDER_EXTERNAL_URL; // Fornecido automaticamente pelo Render
+
+if (RENDER_URL) {
+  cron.schedule('*/14 * * * *', async () => {
+    try {
+      const res = await fetch(`${RENDER_URL}/api/health`);
+      const data = (await res.json()) as { status: string };
+      console.log(`🏓 Keep-alive ping: ${data.status} (${new Date().toLocaleTimeString()})`);
+    } catch (err) {
+      console.warn('⚠️ Keep-alive ping falhou:', (err as Error).message);
+    }
+  });
+  console.log('🏓 Keep-alive cron ativado (a cada 14 min)');
+} else {
+  console.log('ℹ️ RENDER_EXTERNAL_URL não definida — keep-alive desativado (ambiente local)');
+}
 
 // Start
 app.listen(PORT, () => {
