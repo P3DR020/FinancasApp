@@ -12,6 +12,7 @@ import {
   Box,
   Divider,
   ActionIcon,
+  Kbd,
   useMantineColorScheme,
   useComputedColorScheme,
 } from '@mantine/core';
@@ -33,8 +34,10 @@ import {
   IconFileImport,
   IconSun,
   IconMoon,
+  IconSearch,
 } from '@tabler/icons-react';
 import { useAuth } from '../contexts/AuthContext';
+import GlobalSearch, { useGlobalSearch } from './GlobalSearch';
 
 const navItems = [
   { label: 'Dashboard', icon: IconLayoutDashboard, path: '/dashboard' },
@@ -57,6 +60,7 @@ export default function Layout() {
   const [menuOpened, setMenuOpened] = useState(false);
   const { setColorScheme } = useMantineColorScheme();
   const computedColorScheme = useComputedColorScheme('light');
+  const search = useGlobalSearch();
   
   const toggleColorScheme = () => {
     setColorScheme(computedColorScheme === 'dark' ? 'light' : 'dark');
@@ -106,6 +110,30 @@ export default function Layout() {
           </Group>
 
           <Group>
+            {/* Botão de Busca Global */}
+            <UnstyledButton
+              id="global-search-trigger"
+              onClick={search.open}
+              px="sm"
+              py={6}
+              style={{
+                borderRadius: 'var(--mantine-radius-md)',
+                border: '1px solid var(--mantine-color-default-border)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                transition: 'background 0.15s ease',
+              }}
+            >
+              <IconSearch size={16} style={{ opacity: 0.5 }} />
+              <Text size="sm" c="dimmed" visibleFrom="sm">
+                Buscar...
+              </Text>
+              <Kbd size="xs" visibleFrom="sm" style={{ opacity: 0.5 }}>
+                Ctrl+K
+              </Kbd>
+            </UnstyledButton>
+
             <ActionIcon
               onClick={toggleColorScheme}
               variant="default"
@@ -212,6 +240,9 @@ export default function Layout() {
       <AppShell.Main>
         <Outlet />
       </AppShell.Main>
+
+      {/* Busca Global (Ctrl+K) */}
+      <GlobalSearch opened={search.opened} onClose={search.close} />
     </AppShell>
   );
 }

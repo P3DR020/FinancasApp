@@ -16,6 +16,7 @@ import parcelamentosRouter from './routes/parcelamentos';
 import dashboardRouter from './routes/dashboard';
 import contasRouter from './routes/contas';
 import importarRouter from './routes/importar';
+import buscaRouter from './routes/busca';
 
 dotenv.config();
 
@@ -58,6 +59,7 @@ app.use('/api/parcelamentos', authMiddleware, parcelamentosRouter);
 app.use('/api/dashboard', authMiddleware, dashboardRouter);
 app.use('/api/contas', authMiddleware, contasRouter);
 app.use('/api/importar', authMiddleware, importarRouter);
+app.use('/api/busca', authMiddleware, buscaRouter);
 
 // ─── Keep-Alive: Self-ping para evitar cold start no Render Free ───
 // O Render free tier desliga o servidor após ~15 min de inatividade.
